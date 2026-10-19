@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Estrutura e Dinâmica da Psique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #f2ece0;
+    --bg-2: #e9e0cd;
+    --card: #ffffff;
+    --canvas-bg: #f0e8d8;
+    --ink: #2b2620;
+    --ink-soft: #6b6255;
+    --accent: #b8863f;
+    --accent-deep: #8f6529;
+    --accent-soft: rgba(184,134,63,.20);
+    --line: #ddd3bd;
+    --shadow: 0 2.2vh 5vh rgba(60,45,20,.18);
+    --ic-accent: #6c4fa0;
+    --ic-accent-deep: #4f3878;
+  }
+  *{box-sizing:border-box;}
+  button{ -webkit-tap-highlight-color: transparent; }
+  html,body{
+    margin:0;padding:0;width:100%;height:100%;
+    background: radial-gradient(ellipse at 50% 0%, var(--bg-2), var(--bg) 70%);
+    color:var(--ink);
+    font-family:'Poppins', sans-serif;
+    overflow:hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ===== Top chrome ===== */
+  .topbar{
+    position:fixed; top:0; left:0; width:100%;
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 2vh 3vw 0 3vw;
+    padding: calc(2vh + env(safe-area-inset-top)) calc(3vw + env(safe-area-inset-right)) 0 calc(3vw + env(safe-area-inset-left));
+    z-index:50;
+    pointer-events:none;
+  }
+  .topbar .title-block{ pointer-events:auto; }
+  .topbar h1{
+    margin:0; font-size:2.6vh; font-weight:600; letter-spacing:.02em;
+    color:var(--ink);
+  }
+  .topbar .subtitle{
+    margin:.3vh 0 0; font-size:2.1vh; color:var(--ink); font-weight:600;
+  }
+  .step-counter{
+    pointer-events:auto;
+    font-size:1.9vh; font-weight:600; color:var(--accent-deep);
+    background:rgba(255,255,255,.7); border:1px solid var(--line);
+    padding:.8vh 1.6vh; border-radius:999px;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    white-space:nowrap;
+  }
+
+  /* ===== Progress dots ===== */
+  .progress-dots{
+    position:fixed; top:2vh; left:50%; transform:translateX(-50%);
+    top: calc(2vh + env(safe-area-inset-top));
+    display:flex; gap:.9vh; z-index:50;
+  }
+  .progress-dots .dot{
+    width:1.1vh; height:1.1vh; border-radius:50%;
+    background:var(--line); transition: background .35s ease, transform .35s ease;
+  }
+  .progress-dots .dot.slide-sep{ width:.35vh; background:transparent; }
+  .progress-dots .dot.done{ background:var(--accent); }
+  .progress-dots .dot.current{ background:var(--accent-deep); transform:scale(1.5); }
+
+  /* ===== Slides ===== */
+  .slide-view{
+    position:fixed; inset:0; display:none;
+  }
+  .slide-view.active{ display:block; }
+
+  /* ---- Capa ---- */
+  #slide-capa .capa-bg{
+    position:absolute; inset:0; width:100%; height:100%;
+    background-image:url('ind-06-si-mesmo.png');
+    background-repeat:no-repeat;
+    background-size: auto 76%;
+    background-position: 80% 32%;
+    filter: grayscale(90%) contrast(.9) brightness(1.4);
+    opacity:.13;
+    -webkit-mask-image: linear-gradient(100deg, transparent 0%, transparent 34%, rgba(0,0,0,.9) 60%, rgba(0,0,0,.9) 100%);
+    mask-image: linear-gradient(100deg, transparent 0%, transparent 34%, rgba(0,0,0,.9) 60%, rgba(0,0,0,.9) 100%);
+    pointer-events:none;
+    overflow:hidden;
+  }
+  #slide-capa .capa-content{
+    position:absolute; left:7vw; top:0; bottom:0;
+    display:flex; flex-direction:column; justify-content:center;
+    max-width:64vw;
+    opacity:0;
+    transition:opacity .9s ease;
+  }
+  #slide-capa.reveal .capa-content{ opacity:1; }
+  .capa-kicker{
+    font-size:2vh; letter-spacing:.32em; text-transform:uppercase;
+    color:var(--accent-deep); font-weight:600; margin-bottom:2.4vh;
+  }
+  .capa-title{
+    font-family:'Poppins', sans-serif; font-weight:700;
+    font-size:7.6vh; line-height:1.08; margin:0 0 2.6vh; color:var(--ink);
+  }
+  .capa-subtitle{
+    font-family:'EB Garamond', serif; font-style:italic;
+    font-size:3.6vh; color:var(--ink-soft); margin:0;
+  }
+  #slide-capa .capa-credits{
+    position:absolute; left:7vw; bottom:5vh;
+    opacity:0; transition:opacity 1s ease .3s;
+  }
+  #slide-capa.reveal .capa-credits{ opacity:1; }
+  .capa-author{ font-size:2.4vh; font-weight:600; color:var(--ink); }
+  .capa-monitoras{ font-size:1.9vh; font-weight:600; color:var(--ink-soft); margin-top:.5vh; }
+  .capa-inst{ font-size:2vh; color:var(--ink-soft); margin-top:.9vh; }
+  .capa-illustration-credit{ font-size:1.9vh; font-style:italic; color:var(--ink-soft); margin-top:1.6vh; }
+
+  /* ---- Consciência stage ---- */
+  .stage{
+    position:fixed; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    padding: 9vh 3vw 8vh;
+    padding: 9dvh 3vw 8dvh;
+  }
+  .canvas-wrap{
+    --ar: 1.37736; /* 3504/2544, override por slide via id */
+    position:relative;
+    /* width define o eixo principal; height:auto deixa o aspect-ratio
+       calcular a outra dimensão — com width:100%/height:100% fixos os
+       dois ao mesmo tempo, aspect-ratio é ignorado pela spec e a caixa
+       podia sair distorcida (visível em telas estreitas/retrato, onde
+       overlays não-imagem como os círculos do Inconsciente Coletivo
+       viravam elipses). */
+    width: min(100%, calc((100vh - 17vh) * var(--ar)));
+    width: min(100%, calc((100dvh - 17dvh) * var(--ar)));
+    height: auto;
+    max-height: calc(100vh - 17vh);
+    max-height: calc(100dvh - 17dvh);
+    aspect-ratio: var(--ar);
+    background: var(--canvas-bg);
+    border-radius: 1.2vh;
+    box-shadow: var(--shadow);
+    overflow:hidden;
+    border: 1px solid var(--line);
+  }
+  /* canvases do módulo Desenvolvimento Consciente — proporções próprias,
+     cada uma calculada a partir do tamanho real da ilustração-fonte. */
+  #canvas-wrap-dev-a{ --ar: 1.40336; } /* 2672/1904 */
+  #canvas-wrap-dev-b{ --ar: 1.13395; } /* 1600/1411 (ilustração colorida) */
+  .layer, .dev-layer{
+    position:absolute;
+    width:100%; height:100%; top:0; left:0;
+    object-fit: contain;
+    opacity:0;
+    transform: translateY(1.4vh);
+    transition: opacity .7s ease, transform .7s ease;
+    pointer-events:none;
+  }
+  .layer.visible, .dev-layer.visible{ opacity:1; transform:translateY(0); }
+  /* camadas que "transitam" sobre outra já posicionada: só fade, sem deslocar */
+  .dev-layer.fade-only, .dev-layer.fade-only.visible{ transform:none; }
+
+  /* ---- Inconsciente Coletivo (fonte + gráficos sobrepostos) ---- */
+  #canvas-wrap-ic{ --ar: 1; }
+  .ic-bg{
+    position:absolute; inset:0; width:100%; height:100%;
+    object-fit:contain; pointer-events:none;
+  }
+  .ic-penumbra{
+    position:absolute; left:0; top:0; height:100%;
+    width:47.2%;
+    background: linear-gradient(to right, rgba(43,38,32,.42) 0%, rgba(43,38,32,.42) 88%, rgba(43,38,32,0) 100%);
+    transition: width 1s ease;
+    pointer-events:none;
+  }
+  .ic-penumbra.advance{ width:68%; }
+  .ic-line{
+    position:absolute; left:47.2%; top:0; height:75.5%;
+    width:.55%;
+    background: var(--ink);
+    opacity:.82;
+    transform: translateX(-50%);
+    transition: width .9s ease, background .9s ease, opacity .9s ease;
+    pointer-events:none;
+  }
+  .ic-line.thin{
+    width:.2%;
+    background: var(--ink-soft);
+    opacity:.5;
+  }
+  .ic-complexo{
+    position:absolute;
+    border-radius:50%;
+    background: rgba(108,79,160,.16);
+    border: .28vh solid var(--ic-accent);
+    transition: left 1.1s ease, top 1.1s ease, width 1.1s ease, height 1.1s ease;
+    pointer-events:none;
+  }
+  .ic-eu{
+    position:absolute;
+    border-radius:50%;
+    background: rgba(108,79,160,.10);
+    border: .34vh solid var(--ic-accent);
+    display:flex; align-items:center; justify-content:center;
+    transition: left 1.1s ease, top 1.1s ease, width 1.1s ease, height 1.1s ease;
+    pointer-events:none;
+  }
+  .ic-eu-label{
+    font-family:'Poppins', sans-serif; font-weight:700;
+    color: var(--ic-accent-deep);
+    font-size: 2.3vh;
+  }
+  .ic-bridge{
+    position:absolute;
+    opacity:0;
+    transform: translateY(1vh);
+    transition: opacity .8s ease, transform .8s ease;
+    pointer-events:none;
+  }
+  .ic-bridge.visible{ opacity:1; transform:translateY(0); }
+  .ic-arrows{
+    position:absolute;
+    opacity:0;
+    transition: opacity .8s ease .15s;
+    pointer-events:none;
+  }
+  .ic-arrows.visible{ opacity:1; }
+  .ic-symbol{
+    position:absolute;
+    opacity:0;
+    transition: opacity .8s ease .25s;
+    pointer-events:none;
+    text-align:center;
+  }
+  .ic-symbol.visible{ opacity:1; }
+  .ic-symbol-label{
+    font-family:'EB Garamond', serif; font-style:italic;
+    font-size:2.8vh; color:var(--ink);
+    white-space:nowrap;
+  }
+  .ic-symbol-leader{
+    position:absolute; left:50%; top:100%;
+    width:.18vh; background: var(--ic-accent-deep);
+    transform: translateX(-50%);
+  }
+
+  /* ===== Hotspots ===== */
+  .hotspot{
+    position:absolute;
+    border:none; background:transparent; cursor:pointer;
+    padding:0; margin:0;
+    opacity:0; pointer-events:none;
+    transition: opacity .5s ease .35s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .hotspot.active{ opacity:1; pointer-events:auto; }
+  .hotspot .dot{
+    position:absolute;
+    width: 2.1vh; height:2.1vh; border-radius:50%;
+    background: var(--accent-soft);
+    border: 0.25vh solid var(--accent);
+    box-shadow: 0 0 0 0 rgba(184,134,63,.55);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  /* dot posicionado ao lado da área clicável (não sobre a arte/texto) —
+     a área de clique em si (o próprio .hotspot) permanece exatamente
+     nas coordenadas originais, calibradas por template matching. */
+  .hotspot .dot.dot-right{ left:calc(100% + 1vh); top:50%; transform:translateY(-50%); }
+  .hotspot .dot.dot-left{ right:calc(100% + 1vh); left:auto; top:50%; transform:translateY(-50%); }
+  .hotspot .dot.dot-bottom{ top:calc(100% + 1vh); left:50%; transform:translateX(-50%); }
+  .hotspot .dot.dot-top{ bottom:calc(100% + 1vh); top:auto; left:50%; transform:translateX(-50%); }
+  .hotspot:hover .dot{ background: var(--accent); }
+  @keyframes pulse{
+    0%   { box-shadow: 0 0 0 0 rgba(184,134,63,.45); }
+    70%  { box-shadow: 0 0 0 1.6vh rgba(184,134,63,0); }
+    100% { box-shadow: 0 0 0 0 rgba(184,134,63,0); }
+  }
+
+  /* variante "contorno": em vez de um ponto flutuante ao lado (que, em
+     grupos de alvos pequenos e próximos, fica disperso/aleatório), desenha
+     um contorno pulsante diretamente sobre o próprio balão/rótulo — a
+     indicação de clique fica colada ao elemento que ela representa. */
+  .hotspot.outline::after{
+    content:'';
+    position:absolute;
+    inset: -0.65vh -0.9vh;
+    border-radius: 50vh;
+    border: 0.22vh solid var(--accent);
+    background: rgba(184,134,63,.08);
+    box-shadow: 0 0 0 0 rgba(184,134,63,.4);
+    animation: pulse-outline 2.6s ease-in-out infinite;
+    pointer-events:none;
+    transition: background .25s ease, border-color .25s ease;
+  }
+  .hotspot.outline:hover::after{ background: rgba(184,134,63,.18); border-color: var(--accent-deep); }
+  @keyframes pulse-outline{
+    0%   { box-shadow: 0 0 0 0 rgba(184,134,63,.35); }
+    70%  { box-shadow: 0 0 0 1vh rgba(184,134,63,0); }
+    100% { box-shadow: 0 0 0 0 rgba(184,134,63,0); }
+  }
+
+  /* ===== Nav controls ===== */
+  .nav-btn{
+    position:fixed; bottom:3vh;
+    bottom: calc(3vh + env(safe-area-inset-bottom));
+    width:6.4vh; height:6.4vh; border-radius:50%;
+    background:var(--card); border:1px solid var(--line);
+    box-shadow: 0 1vh 2.4vh rgba(60,45,20,.14);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; z-index:50; color:var(--ink);
+    transition: transform .15s ease, box-shadow .15s ease, opacity .3s ease;
+    -webkit-user-select:none; user-select:none;
+    touch-action: manipulation;
+  }
+  .nav-btn svg{ width:2.6vh; height:2.6vh; }
+  .nav-btn:hover{ transform:translateY(-2px); box-shadow: 0 1.4vh 3vh rgba(60,45,20,.2); }
+  .nav-btn:disabled{ opacity:.35; cursor:default; pointer-events:none; }
+  #btn-prev{ left:3vw; left: calc(3vw + env(safe-area-inset-left)); }
+  #btn-next{ right:3vw; right: calc(3vw + env(safe-area-inset-right)); }
+
+  .bottom-hint{
+    position:fixed; bottom:3.4vh; left:50%; transform:translateX(-50%);
+    bottom: calc(3.4vh + env(safe-area-inset-bottom));
+    font-size:1.6vh; color:var(--ink-soft); z-index:40; text-align:center;
+    pointer-events:none;
+  }
+
+  .restart-btn{
+    position:fixed; top:2vh; right:3vw; margin-top:5.4vh;
+    top: calc(2vh + env(safe-area-inset-top)); right: calc(3vw + env(safe-area-inset-right));
+    font-size:1.5vh; color:var(--ink-soft); background:none; border:none;
+    cursor:pointer; text-decoration:underline; z-index:50; padding:.4vh;
+  }
+  .restart-btn:hover{ color:var(--accent-deep); }
+
+  .topbar-right{ display:flex; align-items:center; gap:1.2vh; pointer-events:auto; }
+  .icon-btn{
+    width:3.6vh; height:3.6vh; border-radius:50%; flex:none;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.7); border:1px solid var(--line);
+    color:var(--ink-soft); cursor:pointer;
+    -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+    transition: color .15s ease, transform .15s ease;
+    -webkit-user-select:none; user-select:none;
+    touch-action: manipulation;
+  }
+  .icon-btn:hover{ color:var(--accent-deep); transform:translateY(-1px); }
+  .icon-btn svg{ width:1.9vh; height:1.9vh; display:block; }
+  .icon-btn .icon-compress{ display:none; }
+  .icon-btn.is-fullscreen .icon-expand{ display:none; }
+  .icon-btn.is-fullscreen .icon-compress{ display:block; }
+
+  /* ===== Modal ===== */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(30,24,14,.55);
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none; transition: opacity .3s ease;
+    z-index:100; padding:4vh 4vw;
+  }
+  .modal-backdrop.open{ opacity:1; pointer-events:auto; }
+  .modal-box{
+    background: var(--card);
+    max-width: min(78vw, 92vh);
+    max-height: 84vh;
+    overflow-y:auto;
+    border-radius: 1.4vh;
+    padding: 4.2vh 4.6vh;
+    box-shadow: 0 3vh 8vh rgba(30,24,14,.35);
+    border-top: .6vh solid var(--accent);
+  }
+  .modal-box h2{
+    font-family:'Poppins', sans-serif;
+    font-size: 2.6vh; margin:0 0 2vh; color:var(--accent-deep);
+    font-weight:600; letter-spacing:.02em;
+  }
+  .modal-box blockquote{
+    font-family:'EB Garamond', serif;
+    font-style:italic;
+    font-size: 3vh; line-height:1.5;
+    margin: 0 0 1.6vh; padding: 0 0 0 2vh;
+    border-left: .3vh solid var(--line);
+    color:var(--ink);
+  }
+  .modal-box blockquote + blockquote{ margin-top: 2.6vh; }
+  .modal-box blockquote.pendente{ color:var(--ink-soft); }
+  /* modal largo, duas colunas (Individuação) */
+  .modal-box.wide{ max-width:min(88vw,132vh); }
+  .modal-box.wide blockquote{ font-size:2.8vh; line-height:1.46; }
+  .m-grid{ display:grid; grid-template-columns:3fr 2fr; column-gap:4.4vh; align-items:start; }
+  .m-grid.single{ grid-template-columns:1fr; }
+  .m-grid.lean{ grid-template-columns:7fr 3fr; }
+  .m-notes{
+    font-family:'Poppins', sans-serif; font-size:2.35vh; line-height:1.45; color:var(--ink);
+    border-left:.3vh solid var(--accent-soft); padding-left:2.4vh;
+  }
+  .m-notes p{ margin:0 0 1.5vh; }
+  .m-notes .lbl{
+    display:block; font-size:1.7vh; font-weight:600; letter-spacing:.05em;
+    color:var(--accent-deep); margin-bottom:.2vh;
+  }
+  .m-notes .src{ font-size:1.6vh; font-style:italic; color:var(--ink-soft); margin:2vh 0 0; }
+  .m-own{ font-family:'EB Garamond', serif; font-size:2.8vh; line-height:1.46; margin:1.8vh 0 0; padding-left:2vh; color:var(--ink); }
+  .modal-box .modal-figure{ text-align:center; }
+  .modal-box .modal-figure img{
+    max-width:100%; max-height:50vh;
+    border-radius:.8vh; border:1px solid var(--line);
+  }
+  .modal-box .modal-figure .cite{ text-align:center; margin-top:1.4vh; }
+  .modal-box .cite{
+    font-family:'Poppins', sans-serif;
+    font-size: 1.8vh; color:var(--ink-soft); font-weight:500;
+    display:block; margin-top:.8vh;
+  }
+  .modal-close{
+    position:absolute; top:1.6vh; right:1.8vh;
+    width:4vh; height:4vh; border-radius:50%;
+    background:var(--bg); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:2.2vh; color:var(--ink-soft); line-height:1;
+  }
+  .modal-close:hover{ background:var(--accent-soft); color:var(--accent-deep); }
+  .modal-inner{ position:relative; }
+
+  /* ---- Energia Psíquica — abertura com citação ---- */
+  #slide-energia-capa .capa-bg{
+    position:absolute; left:0; bottom:0; width:56%; height:82%;
+    background-image:url('panel-01-progressao.png');
+    background-size:cover; background-position: 30% 70%;
+    filter: grayscale(60%) contrast(.9) brightness(1.15);
+    opacity:.13;
+    -webkit-mask-image: linear-gradient(45deg, transparent 0%, rgba(0,0,0,.9) 42%, rgba(0,0,0,.9) 100%);
+    mask-image: linear-gradient(45deg, transparent 0%, rgba(0,0,0,.9) 42%, rgba(0,0,0,.9) 100%);
+    pointer-events:none;
+  }
+  .quote-wrap{
+    position:absolute; left:8vw; right:8vw; top:0; bottom:0;
+    display:flex; flex-direction:column; justify-content:center;
+    opacity:0;
+    transition:opacity .9s ease;
+  }
+  #slide-energia-capa.reveal .quote-wrap, #slide-individuacao-capa.reveal .quote-wrap{ opacity:1; }
+  #slide-individuacao-capa .capa-bg{
+    position:absolute; right:0; top:0; width:58%; height:100%;
+    background-image:url('ind-00-base.jpg'); background-size:cover; background-position:center;
+    filter: grayscale(100%) contrast(.9) brightness(1.2); opacity:.11;
+    -webkit-mask-image: linear-gradient(-90deg, rgba(0,0,0,.9) 0%, rgba(0,0,0,.9) 40%, transparent 100%);
+    mask-image: linear-gradient(-90deg, rgba(0,0,0,.9) 0%, rgba(0,0,0,.9) 40%, transparent 100%);
+    pointer-events:none;
+  }
+  .quotes-grid.two{ grid-template-columns:repeat(2,1fr); column-gap:4.4vw; }
+  .quotes-grid.two .q-card blockquote{ font-size:3vh; line-height:1.5; }
+  .energia-title{
+    font-family:'Poppins', sans-serif; font-weight:700;
+    font-size:5.8vh; line-height:1.1; margin:0 0 3.4vh; color:var(--ink);
+  }
+  .jung-quote{
+    font-family:'EB Garamond', serif; font-style:italic;
+    font-size:2.7vh; line-height:1.5; color:var(--ink);
+    margin:0; column-count:2; column-gap:4.2vw;
+    column-rule: 1px solid var(--line);
+  }
+  .jung-quote .emph{
+    font-style:normal; font-weight:700; color:var(--accent-deep);
+  }
+  .jung-cite{
+    font-family:'Poppins', sans-serif; font-size:2vh; font-weight:600;
+    color:var(--ink-soft); margin-top:2.6vh;
+  }
+
+  /* ---- Quadrinhos — Energia Psíquica ---- */
+  .comic-stage{
+    position:fixed; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding: 11vh 3.5vw 8vh;
+    padding: 11dvh 3.5vw 8dvh;
+    gap:1.8vh;
+  }
+  .comic-title{
+    font-family:'Poppins', sans-serif; font-weight:600;
+    font-size:2.6vh; color:var(--accent-deep); text-align:center;
+    letter-spacing:.02em; margin:0;
+    opacity:0;
+    transition:opacity .7s ease;
+  }
+  .comic-stage.reveal .comic-title{ opacity:1; }
+  .comic-strip{
+    width:100%; height:100%;
+    max-height: calc(100vh - 22vh);
+    max-height: calc(100dvh - 22dvh);
+    display:flex; align-items:stretch; justify-content:center; gap:1.6vw;
+  }
+  .panel{
+    position:relative;
+    height:100%; min-width:0;
+    background: var(--canvas-bg); border:1px solid var(--line);
+    border-radius:1vh; box-shadow: var(--shadow);
+    overflow:hidden;
+    opacity:0; transform:translateY(1.8vh) scale(.98);
+    transition: opacity .6s ease, transform .6s ease;
+  }
+  .panel.visible{ opacity:1; transform:translateY(0) scale(1); }
+  /* ilustração colorida com fundo de papel próprio: a caixa da <img> passa a ter
+     exatamente o tamanho da arte e as bordas do papel são suavizadas, para o
+     retângulo não aparecer contra o fundo do painel */
+  .panel.panel-paper{ background:#f2efea; display:flex; align-items:center; justify-content:center; }
+  .panel.panel-paper img{
+    width:100%; height:auto; max-height:100%; padding:0;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 5%, #000 95%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 5%, #000 95%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(to right, transparent 0, #000 5%, #000 95%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 5%, #000 95%, transparent 100%);
+    mask-composite: intersect;
+  }
+  .panel img{
+    width:100%; height:100%; object-fit:contain; display:block;
+    padding:1.4vh;
+  }
+  .panel-badge{
+    position:absolute; top:1vh; left:1vh;
+    width:3.2vh; height:3.2vh; border-radius:50%;
+    background:rgba(255,255,255,.85); border:1px solid var(--line);
+    color:var(--accent-deep); font-family:'Poppins',sans-serif;
+    font-weight:600; font-size:1.5vh;
+    display:flex; align-items:center; justify-content:center;
+    pointer-events:none;
+  }
+  .panel-cite{
+    position:absolute; bottom:1.2vh; right:1.2vh;
+    border:none; border-radius:999px; cursor:pointer;
+    background:var(--accent); color:#fff;
+    font-family:'Poppins', sans-serif; font-weight:600; font-size:1.5vh;
+    padding:.9vh 1.6vh; display:flex; align-items:center; gap:.6vh;
+    opacity:0; pointer-events:none;
+    transition: opacity .5s ease .3s, background .2s ease;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 .6vh 1.6vh rgba(60,45,20,.22);
+  }
+  .panel-cite.active{ opacity:1; pointer-events:auto; }
+  .panel-cite:hover{ background:var(--accent-deep); }
+  .panel-cite .cite-dot{
+    width:1vh; height:1vh; border-radius:50%; background:#fff;
+    box-shadow: 0 0 0 0 rgba(255,255,255,.6);
+    animation: pulse-white 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse-white{
+    0%   { box-shadow: 0 0 0 0 rgba(255,255,255,.5); }
+    70%  { box-shadow: 0 0 0 1vh rgba(255,255,255,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+  }
+
+  /* ---- Energia Psíquica — abertura com três citações ---- */
+  .quotes-grid{
+    display:grid; grid-template-columns: repeat(3, 1fr);
+    column-gap:3vw; align-items:start;
+  }
+  .q-card{ margin:0; padding-top:1.8vh; border-top:.3vh solid var(--accent); }
+  .q-card blockquote{
+    margin:0; font-family:'EB Garamond', serif; font-style:italic;
+    font-size:2.45vh; line-height:1.48; color:var(--ink);
+  }
+  .q-card figcaption{
+    font-family:'Poppins', sans-serif; font-size:1.75vh; font-weight:600;
+    color:var(--ink-soft); margin-top:1.8vh; line-height:1.4;
+  }
+
+  /* ---- Encerramento (espelhado à capa) ---- */
+  #slide-encerramento .capa-bg{
+    position:absolute; inset:0; width:100%; height:100%;
+    background-image:url('panel-08-emergencia-cor.png');
+    background-repeat:no-repeat;
+    background-size: auto 88%;
+    background-position: 82% center;
+    filter: grayscale(45%) contrast(.95) brightness(1.2);
+    opacity:.16;
+    -webkit-mask-image: linear-gradient(100deg, transparent 0%, transparent 30%, rgba(0,0,0,.9) 58%, rgba(0,0,0,.9) 100%);
+    mask-image: linear-gradient(100deg, transparent 0%, transparent 30%, rgba(0,0,0,.9) 58%, rgba(0,0,0,.9) 100%);
+    pointer-events:none;
+    overflow:hidden;
+  }
+  #slide-encerramento.reveal .quote-wrap{ opacity:1; }
+  #slide-encerramento .quote-wrap{ top:10vh; bottom:7vh; justify-content:center; }
+  #slide-encerramento .energia-title{ margin-bottom:2vh; }
+  .encerramento-text{
+    font-family:'EB Garamond', serif; font-size:3.4vh; line-height:1.48;
+    color:var(--ink); max-width:88%; margin:0 0 2.6vh;
+  }
+  .encerramento-quote{ max-width:88%; margin-top:.4vh; }
+  .encerramento-quote blockquote{
+    font-size:3.4vh; line-height:1.46; font-style:italic;
+  }
+  .encerramento-quote figcaption{ font-size:1.9vh; margin-top:1.2vh; }
+
+  /* ---- Referências ---- */
+  .refs-wrap{
+    position:fixed; inset:0;
+    display:flex; flex-direction:column; justify-content:flex-start;
+    padding: 12.5vh 6vw 5vh;
+    padding: 12.5dvh 6vw 5dvh;
+    opacity:0; transition:opacity .9s ease;
+    overflow-y:auto;
+  }
+  #slide-referencias.reveal .refs-wrap{ opacity:1; }
+  .refs-wrap .capa-kicker{ margin-bottom:.8vh; }
+  .refs-title{
+    font-family:'Poppins', sans-serif; font-weight:700;
+    font-size:5vh; color:var(--ink); margin:0 0 1.4vh;
+  }
+  .refs-note{
+    font-family:'EB Garamond', serif; font-size:3.4vh; line-height:1.4;
+    color:var(--ink-soft); max-width:96%; margin:0 0 2.4vh;
+  }
+  .refs-cols{
+    display:grid; grid-template-columns:1fr 1fr; column-gap:3.5vw;
+  }
+  .refs-group-title{
+    font-family:'Poppins', sans-serif; font-weight:600; font-size:2.2vh;
+    letter-spacing:.04em; text-transform:uppercase;
+    color:var(--accent-deep); margin:0 0 1.2vh;
+    padding-bottom:.6vh; border-bottom:.2vh solid var(--line);
+  }
+  .refs-list{ list-style:none; margin:0 0 1vh; padding:0; }
+  .refs-list li{
+    font-family:'EB Garamond', serif; font-size:2.6vh; line-height:1.3;
+    color:var(--ink); margin:0 0 .8vh;
+  }
+  .refs-vol{
+    font-weight:700; color:var(--accent-deep);
+    font-family:'Poppins',sans-serif; font-size:2.3vh;
+  }
+  .refs-fn{
+    font-family:'Poppins', sans-serif; font-size:1.9vh; color:var(--ink-soft);
+    line-height:1.4; margin:.8vh 0 0;
+  }
+
+  /* ---- Palavra-botão dentro do quadro (Desenvolvimento Consciente) ---- */
+  #canvas-wrap-dev-a{ container-type:inline-size; }
+  .board-word{
+    position:absolute; left:74.2%; top:8.4%; width:17.6%; height:21%;
+    display:flex; align-items:center; justify-content:center; gap:.9cqw;
+    border:none; background:transparent; cursor:pointer; padding:0;
+    opacity:0; pointer-events:none;
+    transition: opacity .7s ease;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  }
+  .board-word.active{ opacity:1; pointer-events:auto; }
+  .board-word .bw-text{
+    font-family:'EB Garamond', serif; font-style:italic; font-weight:600;
+    font-size:2.2cqw; line-height:1; color:var(--accent-deep);
+    border-bottom:.18cqw solid var(--accent);
+    padding-bottom:.25cqw;
+  }
+  .board-word .bw-dot{
+    width:1.3cqw; height:1.3cqw; min-width:10px; min-height:10px; border-radius:50%;
+    background: var(--accent-soft); border:.16cqw solid var(--accent);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  .board-word:hover .bw-dot{ background: var(--accent); }
+
+  /* ---- Hotspots circulares do módulo Desenvolvimento Consciente ---- */
+  .dev-hotspot{
+    position:absolute; width:6vh; height:6vh;
+    transform:translate(-50%,-50%);
+    border:none; background:transparent; cursor:pointer; padding:0; margin:0;
+    border-radius:50%;
+    opacity:0; pointer-events:none;
+    transition: opacity .6s ease .25s;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  }
+  .dev-hotspot.active{ opacity:1; pointer-events:auto; }
+  .dev-hotspot .dot{
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:2.6vh; height:2.6vh; border-radius:50%;
+    background: rgba(255,250,238,.92); border:.3vh solid var(--accent);
+    box-shadow: 0 0 0 0 rgba(184,134,63,.55);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  .dev-hotspot:hover .dot{ background: var(--accent); }
+
+  @media (max-width: 700px){
+    .topbar h1{ font-size:2.1vh; }
+    .capa-title{ font-size:5.4vh; }
+    .capa-subtitle{ font-size:2.6vh; }
+    .capa-content, #slide-capa .capa-credits{ left:6vw; max-width:86vw; }
+    #slide-capa .capa-credits{ bottom:8.5vh; }
+    .capa-monitoras{ margin-top:.3vh; }
+    .capa-inst{ margin-top:.4vh; }
+    .capa-illustration-credit{ font-size:1.4vh; margin-top:.5vh; }
+    .modal-box blockquote{ font-size:2.4vh; }
+    .modal-box.wide{ max-width:92vw; }
+    .modal-box.wide blockquote{ font-size:2.3vh; }
+    .m-grid, .m-grid.lean{ grid-template-columns:1fr; row-gap:2.4vh; }
+    .m-notes{ font-size:2.1vh; border-left:0; padding-left:0; border-top:.3vh solid var(--accent-soft); padding-top:2vh; }
+    .m-own{ font-size:2.3vh; }
+    .quotes-grid.two .q-card blockquote{ font-size:2.4vh; }
+    .energia-title{ font-size:4.2vh; }
+    .jung-quote{ column-count:1; font-size:2.4vh; }
+    .quote-wrap{ left:6vw; right:6vw; top:16vh; justify-content:flex-start; overflow-y:auto; padding-bottom:12vh; -webkit-overflow-scrolling:touch; }
+    .quotes-grid{ grid-template-columns:1fr; row-gap:2.6vh; }
+    .q-card blockquote{ font-size:2.4vh; }
+    .comic-strip{ flex-direction:column; max-height:none; height:auto; gap:1.6vh; }
+    .panel{ height:auto; width:100%; aspect-ratio:4/3; flex:none !important; }
+    .comic-stage{
+      justify-content:flex-start; overflow-y:auto; -webkit-overflow-scrolling:touch;
+      padding-top:15vh; padding-top:15dvh;
+      padding-bottom:12vh; padding-bottom:12dvh;
+    }
+    .comic-title{ margin-top:.6vh; }
+    #slide-encerramento .quote-wrap{
+      top:16vh; bottom:auto; justify-content:flex-start;
+      overflow-y:auto; padding-bottom:12vh; -webkit-overflow-scrolling:touch;
+    }
+    .encerramento-text, .encerramento-quote{ max-width:100%; }
+    .encerramento-text{ font-size:2.6vh; }
+    .encerramento-quote blockquote{ font-size:2.6vh; }
+    .refs-wrap{ padding:17vh 6vw 10vh; }
+    .refs-title{ font-size:4vh; }
+    .refs-note{ font-size:2.6vh; }
+    .refs-cols{ grid-template-columns:1fr; row-gap:3vh; }
+    .refs-list li{ font-size:2.3vh; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="title-block">
+      <h1 id="deck-title">Estrutura e Dinâmica da Psique</h1>
+      <div class="subtitle" id="deck-subtitle">Capa</div>
+    </div>
+    <div class="topbar-right">
+      <button class="icon-btn" id="btn-fullscreen" title="Tela cheia" aria-label="Alternar tela cheia">
+        <svg class="icon-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3m11 0h3a2 2 0 0 0 2-2v-3"/></svg>
+        <svg class="icon-compress" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v4a2 2 0 0 1-2 2H3m18 0h-4a2 2 0 0 1-2-2V3M3 15h4a2 2 0 0 1 2 2v4m6-6h4a2 2 0 0 1 2 2v4"/></svg>
+      </button>
+      <div class="step-counter" id="step-counter">Capa</div>
+    </div>
+  </div>
+
+  <div class="progress-dots" id="progress-dots"></div>
+
+  <div class="slide-view active" id="slide-capa">
+    <div class="capa-bg"></div>
+    <div class="capa-content">
+      <div class="capa-kicker">Psicologia Analítica</div>
+      <h2 class="capa-title">Estrutura e<br>Dinâmica da Psique</h2>
+      <p class="capa-subtitle">Teorias da Psicologia Analítica</p>
+    </div>
+    <div class="capa-credits">
+      <div class="capa-author">Prof. Dr. Filipe de Menezes Jesuino</div>
+      <div class="capa-monitoras">Ana Beatrice, Amanda de Castro e Amanda Sousa (Monitoras)</div>
+      <div class="capa-inst">Universidade de Fortaleza — UNIFOR</div>
+      <div class="capa-illustration-credit">Ilustrações: Filipe Jesuino e Vitória Ramos</div>
+    </div>
+  </div>
+
+  <div class="slide-view" id="slide-consciencia">
+    <div class="stage">
+      <div class="canvas-wrap" id="canvas-wrap">
+        <!-- layers e hotspots injetados via JS -->
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-view" id="slide-energia-capa">
+    <div class="capa-bg"></div>
+    <div class="quote-wrap">
+      <h2 class="energia-title">Energia Psíquica</h2>
+      <div class="quotes-grid">
+        <figure class="q-card">
+          <blockquote>A energia psíquica (libido) “é a intensidade do processo psíquico, seu valor psicológico”. Não se trata de valor em acepção moral, estética ou intelectual. Valor tem aqui o significado de intensidade, “que se manifesta por efeitos definidos ou rendimentos psíquicos”. Energia psíquica é um conceito abstrato de relações de movimento, algo inapreensível, um X, comparável (mas não idêntica) à energia física.</blockquote>
+          <figcaption>Silveira, <em>Jung: Vida e Obra</em>, p. 31<br>(com citações diretas de Jung, OC/8.1)</figcaption>
+        </figure>
+        <figure class="q-card">
+          <blockquote>Energia é a intensidade do processo psíquico, seu valor psicológico. Mas não se trata de valor atribuído por considerações morais, estéticas ou intelectuais; o valor psicológico é simplesmente estabelecido por sua força determinante que se manifesta em certos efeitos (“produções”) psíquicos. Também não entendo por libido uma força psíquica.</blockquote>
+          <figcaption>Jung, OC/6, §869</figcaption>
+        </figure>
+        <figure class="q-card">
+          <blockquote>Todos os fenômenos psíquicos são de natureza energética. Os complexos são nós de energia [...] os arquétipos são núcleos de energia em estado virtual e que os símbolos são máquinas transformadoras de energia.</blockquote>
+          <figcaption>Silveira, <em>Jung: Vida e Obra</em>, p. 32</figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-view" id="slide-quadrinhos-a">
+    <div class="comic-stage">
+      <h3 class="comic-title">Progressão e Represamento</h3>
+      <div class="comic-strip">
+        <div class="panel" data-step="1" style="flex:0.981 0.981 0%">
+          <span class="panel-badge">1</span>
+          <img src="panel-01-progressao.png" alt="Progressão">
+          <button class="panel-cite" data-cite="progressao"><span class="cite-dot"></span>citação</button>
+        </div>
+        <div class="panel" data-step="2" style="flex:0.651 0.651 0%">
+          <span class="panel-badge">2</span>
+          <img src="panel-02-represamento.png" alt="Represamento">
+          <button class="panel-cite" data-cite="represamento"><span class="cite-dot"></span>citação</button>
+        </div>
+        <div class="panel" data-step="3" style="flex:0.981 0.981 0%">
+          <span class="panel-badge">3</span>
+          <img src="panel-03-regressao-voluntaria.png" alt="Regressão voluntária">
+          <button class="panel-cite" data-cite="regressao-voluntaria"><span class="cite-dot"></span>citação</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-view" id="slide-quadrinhos-b">
+    <div class="comic-stage">
+      <h3 class="comic-title">Colapso e Regressão</h3>
+      <div class="comic-strip">
+        <div class="panel" data-step="1" style="flex:1.062 1.062 0%">
+          <span class="panel-badge">4</span>
+          <img src="panel-04-colapso.png" alt="Colapso adaptativo">
+          <button class="panel-cite" data-cite="colapso"><span class="cite-dot"></span>citação</button>
+        </div>
+        <div class="panel" data-step="2" style="flex:0.631 0.631 0%">
+          <span class="panel-badge">5</span>
+          <img src="panel-05-regressao-libido.png" alt="Regressão da libido">
+          <button class="panel-cite" data-cite="regressao-libido"><span class="cite-dot"></span>citação</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-view" id="slide-quadrinhos-c">
+    <div class="comic-stage">
+      <h3 class="comic-title">Sombra e Emergência Criativa</h3>
+      <div class="comic-strip">
+        <div class="panel" data-step="1" style="flex:1.060 1.060 0%">
+          <span class="panel-badge">6</span>
+          <img src="panel-06-arquetipos.png" alt="Imagens arquetípicas">
+          <button class="panel-cite" data-cite="arquetipos"><span class="cite-dot"></span>citação</button>
+        </div>
+        <div class="panel" data-step="2" style="flex:0.626 0.626 0%">
+          <span class="panel-badge">7</span>
+          <img src="panel-07-atitude-figuras.png" alt="A atitude e as figuras">
+          <button class="panel-cite" data-cite="atitude-figuras"><span class="cite-dot"></span>citação</button>
+        </div>
+        <div class="panel panel-paper" data-step="3" style="flex:1.091 1.091 0%">
+          <span class="panel-badge">8</span>
+          <img src="panel-08-emergencia-cor.png" alt="Emergência criativa">
+          <button class="panel-cite" data-cite="emergencia"><span class="cite-dot"></span>citação</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-view" id="slide-desenvolvimento-a">
+    <div class="stage">
+      <div class="canvas-wrap" id="canvas-wrap-dev-a">
+        <!-- camadas injetadas via JS -->
+        <button class="board-word" id="board-word" title="Inconsciente"><span class="bw-text">inconsciente</span><span class="bw-dot"></span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-view" id="slide-desenvolvimento-b">
+    <div class="stage">
+      <div class="canvas-wrap" id="canvas-wrap-dev-b">
+        <!-- camadas injetadas via JS -->
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-view" id="slide-inconsciente-coletivo">
+    <div class="stage">
+      <div class="canvas-wrap" id="canvas-wrap-ic">
+        <img class="ic-bg" src="Inconsciente_Coletivo.png" alt="Inconsciente Coletivo">
+        <div class="ic-penumbra" id="ic-penumbra"></div>
+        <div class="ic-line" id="ic-line"></div>
+        <!-- círculos de complexos e do eu injetados via JS -->
+        <img class="ic-bridge" id="ic-bridge" src="bridge.png" alt="Ponte simbólica" style="left:37.2%; top:43%; width:20%; height:10%;">
+        <svg class="ic-arrows" id="ic-arrows" viewBox="0 0 320 160" preserveAspectRatio="none" style="left:37.2%; top:43%; width:20%; height:10%;">
+          <defs>
+            <marker id="icArrowHeadR" markerUnits="userSpaceOnUse" markerWidth="26" markerHeight="22" refX="20" refY="11" orient="auto"><path d="M0,1 L20,11 L0,21 Z" fill="#6c4fa0"/></marker>
+            <marker id="icArrowHeadL" markerUnits="userSpaceOnUse" markerWidth="26" markerHeight="22" refX="6" refY="11" orient="auto"><path d="M20,1 L0,11 L20,21 Z" fill="#6c4fa0"/></marker>
+          </defs>
+          <line x1="22" y1="44" x2="284" y2="44" stroke="#6c4fa0" stroke-width="8" stroke-linecap="round" marker-end="url(#icArrowHeadR)"/>
+          <line x1="284" y1="116" x2="22" y2="116" stroke="#6c4fa0" stroke-width="8" stroke-linecap="round" marker-end="url(#icArrowHeadL)"/>
+        </svg>
+        <div class="ic-symbol" id="ic-symbol" style="left:38%; top:19%; width:18.4%;">
+          <span class="ic-symbol-label">Símbolo</span>
+          <div class="ic-symbol-leader" style="height:8vh;"></div>
+        </div>
+        <button class="hotspot outline" id="ic-symbol-hotspot" style="left:40%; top:17%; width:14%; height:6%;" title="Símbolo"></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-view" id="slide-individuacao-capa">
+    <div class="capa-bg"></div>
+    <div class="quote-wrap">
+      <h2 class="energia-title">Processo de individuação</h2>
+      <div class="quotes-grid two">
+        <figure class="q-card">
+          <blockquote>Há uma destinação, uma possível meta além das fases ou estádios de que tratamos na primeira parte deste livro: é o caminho da individuação. Individuação significa tornar-se um ser único, na medida em que por “individualidade” entendermos nossa singularidade mais íntima, última e incomparável, significando também que nos tornamos o nosso próprio si-mesmo [totalidade psíquica]. Podemos pois traduzir “individuação” como “tornar-se si-mesmo” (<i>Verselbstung</i>) ou “o realizar-se do si-mesmo” (<i>Selbstverwirklichung</i>).</blockquote>
+          <figcaption>Jung, OC/7.2, §266</figcaption>
+        </figure>
+        <figure class="q-card">
+          <blockquote>A individuação, portanto, só pode significar um processo de desenvolvimento psicológico que faculte a realização das qualidades individuais dadas; em outras palavras, é um processo mediante o qual um [ser humano] se torna o ser único que de fato é. Com isto, não se torna “egoísta”, no sentido usual da palavra, mas procura realizar a peculiaridade do seu ser e isto, como dissemos, é totalmente diferente do egoísmo ou do individualismo.</blockquote>
+          <figcaption>Jung, OC/7.2, §267</figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-view" id="slide-individuacao">
+    <div class="stage">
+      <div class="canvas-wrap" id="canvas-wrap-ind">
+        <!-- fundo, Si-mesmo e figuras injetados via JS -->
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-view" id="slide-encerramento">
+    <div class="capa-bg"></div>
+    <div class="quote-wrap">
+      <h2 class="energia-title">Para concluir</h2>
+      <p class="encerramento-text">Percorremos a arquitetura da psique: a consciência e suas quatro funções, a energia que a atravessa em progressão e regressão, o inconsciente pessoal e coletivo como fonte e como sombra, e os passos de um processo que não se fecha — a individuação. Compreender essa dinâmica é também um convite: reconhecer, na própria experiência, os mesmos movimentos que aqui tomaram a forma de imagem e conceito.</p>
+      <figure class="q-card encerramento-quote">
+        <blockquote>O processo de individuação só é real se o indivíduo estiver consciente dele e, consequentemente, mantendo uma ligação viva com ele. Não sabemos se o pinheiro tem consciência do seu processo de crescimento, se aprecia ou sofre as diferentes alterações que o modelam. Mas o homem, certamente, é capaz de participar de maneira consciente do seu desenvolvimento. Chega mesmo a sentir que, de tempos em tempos, pode cooperar ativamente com ele, tomando livremente várias decisões. E essa cooperação pertence ao processo de individuação, no seu sentido mais preciso.</blockquote>
+        <figcaption>Von Franz, <em>O processo de individuação</em>, in <em>O homem e seus símbolos</em></figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <div class="slide-view" id="slide-referencias">
+    <div class="refs-wrap">
+      <div class="capa-kicker">Fontes e edições</div>
+      <h2 class="refs-title">Referências</h2>
+      <p class="refs-note">As <em>Obras Completas</em> de Jung citadas aqui seguem a edição brasileira da Editora Vozes. Diferentes impressões preservam a mesma divisão por volume e a mesma numeração de parágrafo (§) — por isso cada citação (OC/volume, §parágrafo) localiza o trecho original independentemente da edição em mãos.</p>
+      <div class="refs-cols">
+        <div class="refs-group">
+          <h3 class="refs-group-title">Obras completas de C. G. Jung (Vozes)</h3>
+          <ul class="refs-list">
+            <li><span class="refs-vol">OC/5</span> — Símbolos da Transformação</li>
+            <li><span class="refs-vol">OC/6</span> — Tipos Psicológicos</li>
+            <li><span class="refs-vol">OC/7</span> (tomos 1 e 2) — Dois Textos de Psicologia Analítica</li>
+            <li><span class="refs-vol">OC/8</span> (tomos 1 e 2) — A Dinâmica do Inconsciente</li>
+            <li><span class="refs-vol">OC/9</span>, tomo 2 — Aion: Estudos sobre o Simbolismo do Si-mesmo</li>
+            <li><span class="refs-vol">OC/12</span> — Psicologia e Alquimia</li>
+            <li><span class="refs-vol">OC/16</span> — A Prática da Psicoterapia</li>
+            <li><span class="refs-vol">OC/18</span> (tomos 1 e 2) — A Vida Simbólica</li>
+          </ul>
+          <p class="refs-fn">JUNG, C. G. Obras Completas. Petrópolis: Vozes.</p>
+        </div>
+        <div class="refs-group">
+          <h3 class="refs-group-title">Outras obras citadas</h3>
+          <ul class="refs-list">
+            <li>FRANZ, Marie-Louise von. <em>O processo de individuação</em>. In: JUNG, C. G. (org.) et al. <em>O homem e seus símbolos</em>. Rio de Janeiro: Nova Fronteira.</li>
+            <li>FRANZ, Marie-Louise von. <em>C.G. Jung: seu mito em nossa época</em>. São Paulo: Cultrix.</li>
+            <li>KAST, Verena. <em>A dinâmica dos símbolos: fundamentos da psicoterapia junguiana</em>. São Paulo: Loyola.</li>
+            <li>KAST, Verena. <em>Jung e a psicologia profunda</em>. Petrópolis: Vozes.</li>
+            <li>SILVEIRA, Nise da. <em>Jung: vida e obra</em>. Rio de Janeiro: Paz e Terra.</li>
+            <li>YOUNG-EISENDRATH, Polly; DAWSON, Terence (orgs.). <em>Manual de estudos junguianos</em>. Petrópolis: Vozes.</li>
+          </ul>
+          <p class="refs-fn">Anos e tiragens variam conforme a edição — confira a ficha catalográfica do exemplar utilizado.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="restart-btn" id="btn-restart" title="Voltar para a capa">reiniciar</button>
+
+  <button class="nav-btn" id="btn-prev" aria-label="Anterior" disabled>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <button class="nav-btn" id="btn-next" aria-label="Próximo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+  </button>
+
+  <div class="bottom-hint" id="bottom-hint">clique ou pressione uma seta para começar</div>
+
+  <div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-inner">
+        <button class="modal-close" id="modal-close">&times;</button>
+        <h2 id="modal-title"></h2>
+        <div id="modal-body"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ---------------------------------------------------------
+   Coordenadas calculadas por correlação de template contra
+   "00 Consciência.png" (imagem-mestre de montagem, 3504x2544px).
+   Cada camada e cada hotspot está em % do canvas, garantindo
+   alinhamento perfeito em qualquer resolução de tela.
+--------------------------------------------------------- */
+
+const LAYERS = [
+  { step:1, src:'layer-01-titulo.png',        left:4.566,  top:7.233,  width:20.776, height:32.587 },
+  { step:2, src:'layer-02-caracteristicas.png',left:21.233, top:14.583, width:14.840, height:25.354 },
+  { step:3, src:'layer-03-relacao-eu.png',     left:1.712,  top:11.950, width:7.192,  height:32.153 },
+  { step:3, src:'layer-04-eu.png',             left:0.913,  top:37.933, width:27.854, height:24.331 },
+  { step:4, src:'layer-05-funcoes.png',        left:2.740,  top:65.094, width:29.395, height:34.906 },
+  { step:5, src:'layer-06-progressao.png',     left:34.019, top:23.585, width:33.533, height:17.138 },
+  { step:6, src:'layer-07-diferenciacao.png',  left:49.572, top:14.465, width:15.526, height:29.512 },
+  { step:7, src:'layer-08-porta.png',          left:27.140, top:0,      width:72.860, height:100 },
+];
+
+const HOTSPOTS = [
+  { step:2, left:21.233, top:14.583, width:14.840, height:25.354,
+    title:'Consciência',
+    body:`<blockquote>A mente consciente caracteriza-se sobremaneira por uma certa estreiteza; ela pode apreender poucos dados simultâneos num dado momento. [...] apenas alcançamos uma espécie de continuidade, de visão geral ou de relacionamento com o mundo consciente através da sucessão de momentos conscientes. É impossível estabelecermos continuamente uma imagem de totalidade devido à própria limitação da consciência. A nossa possibilidade restringe-se à percepção de instantes de existência.<span class="cite">JUNG, OC18</span></blockquote>` },
+
+  { step:3, left:1.712, top:11.950, width:7.192, height:32.153, dotSide:'top',
+    title:'Relação com o Eu',
+    body:`<blockquote>Por consciência entendo a referência dos conteúdos psíquicos ao eu enquanto assim for entendida pelo eu. Referências ao eu, enquanto não entendidas como tais pelo eu, são inconscientes. A consciência é a função ou atividade que mantém a relação dos conteúdos psíquicos com o eu. Consciência não é a mesma coisa que psique, pois a psique representa o conjunto de todos os conteúdos psíquicos; estes não estão todos necessariamente vinculados ao eu, isto é, relacionados de tal forma com o eu que lhes caiba a qualidade de conscientes.<span class="cite">JUNG, OC 6, §781</span></blockquote>` },
+
+  { step:4, left:9.818, top:77.476, width:9.247, height:3.616, indicator:'outline',
+    title:'Sensação',
+    body:`<blockquote>Constata a presença das coisas que nos cercam e é responsável pela adaptação do indivíduo à realidade objetiva.<span class="cite">Função irracional de Percepção</span></blockquote>` },
+
+  { step:4, left:3.882, top:79.677, width:2.683, height:14.583, indicator:'outline',
+    title:'Pensamento',
+    body:`<blockquote>Esclarece o que significam os objetos… Julga, classifica, discrimina uma coisa da outra.<span class="cite">Função racional de Discernimento</span></blockquote>` },
+
+  { step:4, left:21.947, top:80.425, width:2.597, height:14.465, indicator:'outline',
+    title:'Sentimento',
+    body:`<blockquote>Faz a estimativa dos objetos. Decide do valor que têm para nós. Estabelece julgamentos como o pensamento, mas a sua lógica é toda diferente. É a lógica do coração.<span class="cite">Função racional de Julgamento</span></blockquote>` },
+
+  { step:4, left:9.390, top:93.750, width:9.019, height:3.852, indicator:'outline',
+    title:'Intuição',
+    body:`<blockquote>É uma percepção via inconsciente. É apreensão da atmosfera onde se movem os objetos, de onde vêm e qual o possível curso de seu desenvolvimento.<span class="cite">Função irracional de Percepção</span></blockquote>` },
+
+  { step:5, left:44.207, top:24.646, width:3.481, height:1.965,
+    title:'Atitude',
+    body:`<blockquote>Entendemos a atitude como uma disposição da psique de agir ou reagir em certa direção. O conceito é muito importante, sobretudo para os fenômenos complexos da psique porque expressa aquele fenômeno psicológico especial que certos estímulos provocam às vezes de forma muito forte e às vezes de modo bem fraco ou não o provocam de forma nenhuma. Ter atitude significa: estar pronto para algo determinado ainda que este algo seja inconsciente, pois ter atitude é o mesmo que direção apriorística para o determinado, quer seja ele representado ou não.<span class="cite">JUNG, OC/6, §768</span></blockquote>` },
+
+  { step:5, left:44.835, top:31.918, width:7.335, height:1.848,
+    title:'Progressão',
+    body:`<blockquote>[...] só poucos conteúdos chegam ao mais alto grau de consciência e apenas reduzido número de conteúdos pode estar ao mesmo tempo no campo da consciência. A atividade da consciência é selecionadora. A seleção exige direção. E direção exige exclusão de todo o irrelevante. Disso resulta obviamente certa unilateralidade da orientação da consciência.<span class="cite">JUNG, OC6, §774</span></blockquote>
+           <blockquote>A adaptação psicológica consiste de dois processos: 1. Adaptação às condições externas. 2. Adaptação às condições internas.<span class="cite">JUNG, OC18, §1084</span></blockquote>` },
+
+  { step:6, left:49.858, top:35.298, width:7.992, height:2.358,
+    title:'Diferenciação',
+    body:`<blockquote>Significa o desenvolvimento de diferenças, a separação de partes de um todo. [...] emprego o conceito de diferenciação sobretudo em vista das funções psicológicas. Enquanto alguma função ainda estiver fundida com uma ou outras mais funções, por exemplo, pensamento e sentimento ou sentimento e sensação etc., de modo a não poder manifestar-se autonomamente, está ela em estado arcaico e não está diferenciada, isto é, não é uma parte separada do todo e com vida própria. [...] Enquanto uma função for totalmente, ou em sua maior parte, inconsciente, também será não diferenciada e estará fundida em suas partes e com outras funções. A diferenciação consiste em separar as funções umas das outras e seus elementos individuais uns dos outros. Sem diferenciação é impossível a direção, pois a direção de uma função, ou sua orientabilidade, consiste em separar e excluir o que é irrelevante. Pela fusão com coisas irrelevantes tornou-se impossível a orientabilidade: somente a função diferenciada prova ser capaz de direção.<span class="cite">JUNG, OC/6, §786</span></blockquote>` },
+
+  { step:7, left:68.522, top:13.758, width:6.564, height:7.862,
+    title:'Unilateralidade',
+    body:`<blockquote>(A atitude) é a base essencial da unilateralidade da orientação consciente. Levaria a uma completa perda de equilíbrio se não houvesse na psique uma função autorreguladora, compensadora que corrigisse a atitude consciente. Neste sentido, a duplicidade da atitude é um fenômeno normal que só traz efeitos perniciosos quando a unilateralidade consciente é excessiva. Na qualidade de atenção comum, a atitude pode ser um fenômeno parcial relativamente insignificante ou também um princípio geral que determina a psique inteira. Por força da disposição ou da influência do ambiente, da educação, da experiência geral de vida ou da convicção pode existir habitualmente uma constelação de conteúdos que engendre de modo constante e até os mínimos detalhes uma certa atitude.<span class="cite">JUNG, OC/6, §769</span></blockquote>` },
+
+  { step:7, left:43.122, top:46.776, width:7.706, height:5.110,
+    title:'Dissociação',
+    body:`<blockquote>Quanto maior a dissociação, isto é, o distanciamento da atitude consciente dos conteúdos individuais e coletivos do inconsciente, tanto mais prejudicialmente o inconsciente inibe ou intensifica os conteúdos conscientes.</blockquote>` },
+
+  { step:7, left:87.386, top:35.770, width:2.283, height:3.145,
+    title:'Inconsciente pessoal',
+    body:`<blockquote>Apesar de os processos inconscientes não serem diretamente observáveis, podemos classificar seus produtos, que atingem o limiar da consciência, em duas classes: a primeira contém material reconhecível, de origem definidamente pessoal; são aquisições do indivíduo ou produtos de processos instintivos que completam, inteiram a personalidade. Há ainda os conteúdos esquecidos ou reprimidos, mais os dados criativos. Nada existe de peculiar em tais fatores. Em outras pessoas os elementos a que nos estamos referindo podem ser conscientes; muita gente está consciente de coisas que outras ignoram. Dei a essa classe de conteúdos o nome de mente subconsciente ou inconsciente pessoal, porque, dentro dos limites do nosso julgamento, creio ser tal camada inteiramente composta de elementos pessoais e componentes da personalidade humana em seu todo.<span class="cite">JUNG, OC/18.1, §78</span></blockquote>` },
+];
+
+/* ---------------------------------------------------------
+   Citações dos quadrinhos de Energia Psíquica (modais.md,
+   pasta "Energia Psíquica"). O painel "Colapso adaptativo" ganhou
+   sua citação (Jung, OC/8.1, §61) numa revisão posterior.
+--------------------------------------------------------- */
+const CITATIONS = {
+  'progressao': { title:'Progressão',
+    body:`<blockquote>Progressão é o dia a dia do caminhar evolutivo do processo psicológico de adaptação. Como se sabe, a adaptação nunca termina, embora a tendência seja acreditarmos que termine porque confundimos a nova atitude atingida com a verdadeira adaptação. Nós somente conseguimos satisfazer à exigência da adaptação mediante uma atitude orientada correspondente. O trabalho da adaptação realiza-se, portanto, em duas etapas: 1) Chegar à nova atitude. 2) Completar a adaptação por meio da nova atitude. A atitude para com a realidade é algo extraordinariamente persistente, mas, por mais persistente que seja o habitus, o seu trabalho de adaptação efetivo é inversamente menor. Esta é a consequência necessária da constante modificação do ambiente e da nova adaptação por ela condicionada.<span class="cite">JUNG, OC/8.1, §60</span></blockquote>` },
+
+  'represamento': { title:'Represamento',
+    body:`<blockquote>A progressão da libido consistiria assim em dar contínua satisfação à exigência das condições do ambiente. Como essa realização só pode ser conseguida mediante uma nova atitude — e esta, por ser uma atitude, é necessariamente orientada e unilateral —, pode ocorrer facilmente que a atitude não mais cumpra com a exigência da adaptação, devido a modificações sucedidas nas condições externas que demandam outra atitude, diferente da existente. Assim, a atitude sensível, que procura atender às exigências da realidade por meio da intuição, pode facilmente deparar com uma condição que só pode ser satisfeita mediante uma atitude mental, isto é, uma anterior compreensão racional. Neste caso, a atitude intuitiva é ineficiente. E assim também cessa a progressão da libido. Extingue-se o sentimento de vida anteriormente existente, e em compensação aumenta desagradavelmente o valor psíquico de certos conteúdos do consciente, conteúdos e reações subjetivas tomam a frente, o estado torna-se carregado de afetos e tendente a explosões. Tais sintomas significam um represamento da libido.<span class="cite">Jung, OC/8.1, §61</span></blockquote>` },
+
+  'regressao-voluntaria': { title:'Regressão voluntária',
+    body:`<blockquote>Existem símbolos que se impõem a nós em alguma situação da vida, que percebemos como imagens em sonhos, fantasias que dificilmente podemos repelir etc. Há também uma atitude simbolizante como atividade do eu (...)<span class="cite">Kast, Dinâmica dos Símbolos</span></blockquote>
+           <blockquote>[913] Havendo, no entanto, plena igualdade e equivalência dos opostos, comprovadas pela participação incondicional do eu na tese e na antítese, produz-se uma suspensão da vontade, pois já não é possível querer porque todo motivo tem a seu lado um contramotivo igualmente forte.</blockquote>` },
+
+  'regressao-libido': { title:'Regressão da libido',
+    body:`<blockquote>A marcha retrógrada da libido terá por efeito a reativação de conteúdos do mundo interior. Serão reanimados materiais excluídos do consciente, inibidos no inconsciente, por serem perturbadores dos esforços de adaptação ao mundo exterior (“A inibição é idêntica ao que Freud chama censura”). Desse modo, adquirem elevação de potencial as pulsões sexuais infantis insatisfeitas, as tendências incompatíveis com a atitude moral consciente do indivíduo, com seus julgamentos racionais ou estéticos. Também, segundo frisa Jung, serão alimentados germens de novas possibilidades de vida que ainda não haviam ganhado forças para emergir. Os conteúdos do inconsciente ativados pelo novo afluxo de libido aproximam-se do consciente. O ego poderá então confrontá-los, considerá-los atentamente. A regressão da libido torna-se, assim, uma fase útil no processo de desenvolvimento da personalidade.<span class="cite">Silveira, Jung vida e obra, p. 32-3</span></blockquote>` },
+
+  'colapso': { title:'Colapso adaptativo',
+    body:`<blockquote>E assim também cessa a progressão da libido. Extingue-se o sentimento de vida anteriormente existente, e em compensação aumenta desagradavelmente o valor psíquico de certos conteúdos do consciente, conteúdos e reações subjetivas tomam a frente, o estado torna-se carregado de afetos e tendente a explosões.<span class="cite">Jung, OC/8.1, §61</span></blockquote>` },
+
+  'arquetipos': { title:'Imagens arquetípicas',
+    body:`<blockquote>Se a regressão vai além da fase infantil e penetra na fase pré-consciente (“pré-natal”), aparecem imagens arquetípicas que não mais se associam a recordações individuais, mas pertencem àquele patrimônio de possibilidades imaginativas hereditárias que renascem com cada ser humano. Aqui surgem as imagens de seres “divinos” que são de natureza em parte humana, em parte animal.<span class="cite">Jung, OC/5, §264</span></blockquote>` },
+
+  'atitude-figuras': { title:'A atitude e as figuras',
+    body:`<blockquote>A maneira como estas figuras se apresentam depende da atitude do consciente: se este tem uma atitude negativa para com o inconsciente, os animais são assustadores; se a atitude for positiva, aparecem por exemplo “animais prestativos”.<span class="cite">Jung, OC/5, §264</span></blockquote>` },
+
+  'emergencia': { title:'Emergência criativa',
+    body:`<blockquote>Pela atividade do inconsciente emerge novo conteúdo, constelado igualmente pela tese e antítese, e que se comporta compensatoriamente para com ambos. Uma vez que este conteúdo apresenta uma relação tanto com a tese quanto com a antítese, forma uma base intermédia onde os opostos podem unificar-se.<span class="cite">Jung, OC/6, §914</span></blockquote>
+           <blockquote>Desde que os conteúdos do inconsciente sejam confrontados e integrados, dissolvem-se estagnações, removem-se bloqueios e a libido volta a fluir na direção do exterior. Recomeça nova fase de progressão.<span class="cite">Silveira, Jung vida e obra, p. 32-3</span></blockquote>` },
+};
+
+/* ---------------------------------------------------------
+   Camadas do módulo "Desenvolvimento Consciente" — dois grupos,
+   cada um em seu próprio slide/canvas (proporções diferentes,
+   calculadas a partir do tamanho real de cada ilustração-fonte).
+   Posições de "chamada"/"bebê" calculadas por correlação de
+   template contra as respectivas imagens "Visualização Completa".
+   Cada camada tem "showAt" (passo em que aparece) e, quando é
+   substituída por outra em vez de apenas somada, "hideAt" (passo
+   em que desaparece de novo) — mecânica de troca, não só adição.
+--------------------------------------------------------- */
+const DEV_LAYERS = [
+  // Slide "Atitude e Desenvolvimento" (canvas 2672×1904)
+  { slide:7, canvas:'canvas-wrap-dev-a', src:'dev-a-01-visao-do-eu.png', left:0, top:0, width:100, height:100, showAt:1, hideAt:2 },
+  { slide:7, canvas:'canvas-wrap-dev-a', src:'dev-a-02-visao-real.png',  left:0, top:0, width:100, height:100, showAt:2 },
+  { slide:7, canvas:'canvas-wrap-dev-a', src:'dev-a-03-chamada.png',     left:72.942, top:77.153, width:24.139, height:22.216, showAt:4 },
+  // Slide "Individuação" (canvas 3504×2544, mesma proporção da Consciência).
+  // Posições das figuras medidas por correlação de template contra "Composição final.png"
+  // (encaixe exato, escala 1:1). A cabeça do Si-mesmo entra por trás das figuras no passo 6.
+  { slide:11, canvas:'canvas-wrap-ind', src:'ind-00-base.jpg',       left:0, top:0, width:100, height:100, showAt:1, fade:true },
+  { slide:11, canvas:'canvas-wrap-ind', src:'ind-06-si-mesmo.png',   left:0, top:0, width:100, height:100, showAt:6, fade:true },
+  { slide:11, canvas:'canvas-wrap-ind', src:'ind-01-persona.png',    left:47.517, top:78.656, width:6.678,  height:14.387, showAt:1 },
+  { slide:11, canvas:'canvas-wrap-ind', src:'ind-02-ego.png',        left:38.813, top:52.673, width:10.474, height:21.659, showAt:2 },
+  { slide:11, canvas:'canvas-wrap-ind', src:'ind-03-sombra.png',     left:52.511, top:54.796, width:11.473, height:18.003, showAt:3 },
+  { slide:11, canvas:'canvas-wrap-ind', src:'ind-04-anima.png',      left:31.678, top:24.175, width:14.583, height:26.179, showAt:4 },
+  { slide:11, canvas:'canvas-wrap-ind', src:'ind-05-animus.png',     left:61.187, top:24.725, width:11.644, height:28.538, showAt:5 },
+  // Slide "Inconsciente Coletivo" (canvas 2304×2032)
+  // Bebê isolado (428×328) em escala 1:1 dentro da imagem completa (1600×1411),
+  // posição obtida por correlação de template: a transição não "salta".
+  { slide:8, canvas:'canvas-wrap-dev-b', src:'dev-b-01-bebe-cor.png',     left:32.5, top:42.594, width:26.75, height:23.246, showAt:1 },
+  { slide:8, canvas:'canvas-wrap-dev-b', src:'dev-b-02-coletivo-cor.png', left:0, top:0, width:100, height:100, showAt:3, fade:true },
+];
+
+/* ---------------------------------------------------------
+   Hotspots do slide 8 (Desenvolvimento Consciente — Inconsciente
+   Coletivo). Posição = centro do botão, em % do canvas.
+   Sequência: 1 bebê · 2 botão do bebê · 3 transição para a imagem completa · 4 botão do raio.
+--------------------------------------------------------- */
+const DEV_HOTSPOTS = [
+  { slide:8, canvas:'canvas-wrap-dev-b', showAt:2, cx:60.3, cy:56.0,
+    title:'Predisposição psíquica',
+    body:`<blockquote>Assim o [ser humano] nasce com sua complicada predisposição psíquica que é tudo menos uma tabula rasa. Mesmo a mais arrojada fantasia tem os seus limites determinados pela herança psíquica, e mesmo através dos véus da fantasia mais desenfreada transparecem aquelas dominantes que são inerentes à mente humana desde tempos imemoriais.<span class="cite">Jung, OC/8.2, §719</span></blockquote>` },
+  { slide:8, canvas:'canvas-wrap-dev-b', showAt:4, cx:59.4, cy:23.4,
+    title:'Arquétipos',
+    body:`<blockquote>O inconsciente, pelo contrário, é a fonte de todas as forças instintivas da psique e encerra as formas ou categorias que as regulam, quais sejam precisamente os arquétipos. Todas as ideias e representações mais poderosas da humanidade remontam aos arquétipos. Isto acontece especialmente com as ideias religiosas. Mas os conceitos centrais da Ciência, da Filosofia e da Moral também não fogem a esta regra. Na sua forma atual eles são variantes das ideias primordiais, geradas pela aplicação e adaptação conscientes dessas ideias à realidade, pois a função da consciência é não só a de reconhecer e assumir o mundo exterior através da porta dos sentidos, mas traduzir criativamente o mundo exterior para a realidade visível.<span class="cite">Jung, OC/8.2, §342</span></blockquote>` },
+
+  // ---- Individuação: um modal por figura (textos a incluir) ----
+  { slide:11, canvas:'canvas-wrap-ind', showAt:1, cx:56.2, cy:85.8, title:'Persona', wide:true, body:`<div class="m-grid single"><div><blockquote>A este segmento arbitrário da psique coletiva, elaborado às vezes com grande esforço, dei o nome de persona. A palavra persona é realmente uma expressão muito apropriada, porquanto designava originalmente a máscara usada pelo ator, significando o papel que ia desempenhar. Se tentarmos estabelecer uma distinção entre o material psíquico consciente e o inconsciente, logo nos encontraremos diante do maior dilema: no fundo teremos de admitir que a afirmação acerca do inconsciente coletivo, isto é, de que seus conteúdos são gerais, também é válida no que concerne aos conteúdos da persona. Sendo esta última um recorte mais ou menos arbitrário e acidental da psique coletiva, cometeríamos um erro se a considerássemos (a persona), <i>in toto</i>, como algo “individual”. Como seu nome revela, ela é uma simples máscara da psique coletiva, máscara que aparenta uma individualidade, procurando convencer aos outros e a si mesma que é uma individualidade, quando, na realidade, não passa de um papel, no qual fala a psique coletiva.<span class="cite">Jung, OC/7.2, §245</span></blockquote></div></div>` },
+  { slide:11, canvas:'canvas-wrap-ind', showAt:2, cx:36.9, cy:63.5, title:'Eu (ego)', wide:true, body:`<div class="m-grid"><div><blockquote>O eu é um fator complexo ao qual todos os conteúdos conscientes se referem. Ele forma, por assim dizer, o centro do campo da consciência; e, na medida em que este abrange a personalidade empírica, o eu é o sujeito de todos os atos pessoais da consciência.<span class="cite">Jung, <em>Aion</em> (OC/9.2), cap. 1 · tradução livre</span></blockquote></div><aside class="m-notes"><p><span class="lbl">Características</span>Autoimagem · memória voluntária · vontade · sujeito dos atos conscientes</p><p><span class="lbl">Na individuação</span>Relaciona-se com anima e animus; integra e assimila a sombra.</p><p class="src">Notas a partir de Kast, <em>Jung e a Psicologia Profunda</em>, cap. “O processo de individuação”.</p></aside></div>` },
+  { slide:11, canvas:'canvas-wrap-ind', showAt:3, cx:65.9, cy:63.8, title:'Sombra', wide:true, body:`<div class="m-grid"><div><blockquote>A sombra não é o todo da personalidade inconsciente: representa qualidades e atributos desconhecidos ou pouco conhecidos do ego — aspectos que pertencem sobretudo à esfera pessoal e que poderiam também ser conscientes. Sob certos ângulos, a sombra pode também consistir de fatores coletivos que brotam de uma fonte situada fora da vida pessoal do indivíduo.</blockquote><blockquote>Quando uma pessoa tenta ver a sua sombra, ela fica consciente (e muitas vezes envergonhada) das tendências e impulsos que nega existirem em si mesma, mas que consegue perfeitamente ver nos outros [...].<span class="cite">Von Franz, <em>O processo de individuação</em>, in <em>O homem e seus símbolos</em></span></blockquote></div><aside class="m-notes"><p><span class="lbl">O que é</span>Tudo o que não conseguimos aceitar em nós. Não é determinada pelo conteúdo, mas pela relação com o eu.</p><p><span class="lbl">Como aparece</span>Imagens de figuras sombrias, desagradáveis ou incômodas. Não são o que somos, são parte do que somos.</p><p><span class="lbl">Na individuação</span>É preciso vê-la de frente e nos responsabilizar por ela. É trabalho para a vida inteira.</p><p class="src">Notas a partir de Kast, <em>Jung e a Psicologia Profunda</em>, cap. “O processo de individuação”.</p></aside></div>` },
+  { slide:11, canvas:'canvas-wrap-ind', showAt:4, cx:29.9, cy:37.3, title:'Anima', wide:true, body:`<div class="m-grid"><div><blockquote>Uma vez que os aspectos “inferiores” da personalidade-ego se tornem conscientes e sejam integrados, costuma vir à luz um aspecto contrassexual do inconsciente. Se a personalidade consciente estiver mais comprometida com o aspecto Logos da vida, como costuma acontecer com os homens, o aspecto Eros aparece personificado em figuras femininas nos sonhos.<span class="cite">Von Franz, <em>C.G. Jung: seu mito em nossa época</em></span></blockquote><p class="m-own">O arquétipo que condiciona essa emergência típica, chamamos de anima.</p></div><aside class="m-notes"><p><span class="lbl">Como aparece</span>Mulher misteriosa e/ou fascinante; personificações e elementos da natureza; animais aquáticos, água.</p><p><span class="lbl">Dimensão Eros</span>Ligada ao materno; proximidade maior com o inconsciente; nova autopercepção.</p><p><span class="lbl">Par estrutural</span>Com o animus, forma os arquétipos do relacionamento e da união.</p><p class="src">Notas a partir de Kast, <em>Jung e a Psicologia Profunda</em>, cap. “O processo de individuação”.</p></aside></div>` },
+  { slide:11, canvas:'canvas-wrap-ind', showAt:5, cx:74.6, cy:39.0, title:'Animus', wide:true, body:`<div class="m-grid"><div><blockquote>Inversamente, se o aspecto Eros da vida tiver recebido mais atenção do ego, como costuma acontecer com as mulheres, haverá personificações masculinas do aspecto Logos. [...] O animus da mulher, [... via de regra], assume antes a forma de impulsos inconscientes de ação; de súbita iniciativa; de enunciação autônoma de opiniões; de razões ou convicções.<span class="cite">Von Franz, <em>C.G. Jung: seu mito em nossa época</em></span></blockquote><blockquote>O homem sem relação não tem totalidade, pois só a alcança por meio da alma, que, por sua vez, não pode existir sem seu outro lado, que sempre se encontra no Tu.<span class="cite">Jung, OC/16, §454</span></blockquote></div><aside class="m-notes"><p><span class="lbl">Como aparece</span>Figura masculina forte, impulsiva, opinativa, rígida, criativa, intelectual ou guia; construções sólidas; vozes desincorporadas; hordas; objetos cortantes; animais ou artefatos de força.</p><p><span class="lbl">Dimensão Logos</span>Ligado ao paterno.</p><p><span class="lbl">Par estrutural</span>Fascínio · excesso · identificação.</p><p class="src">Notas a partir de Kast, <em>Jung e a Psicologia Profunda</em>, cap. “O processo de individuação”.</p></aside></div>` },
+  { slide:11, canvas:'canvas-wrap-ind', showAt:6, cx:50.0, cy:9.5,  title:'Si-mesmo', wide:true, body:`<div class="m-grid lean"><div><blockquote>“O si-mesmo, o ser redondo, ou seja, perfeito dos primórdios e do fim dos tempos”; início e objetivo do ser humano de modo geral.<span class="cite">Jung, OC/16, §416</span></blockquote><blockquote>Defino o “si-mesmo” como sendo a totalidade da psique consciente e inconsciente. No entanto, essa totalidade transcende a nossa visão: é um verdadeiro <i>lapis invisibilitatis</i> (pedra da invisibilidade). Na medida em que o inconsciente existe, não é definível e sua existência é um mero postulado. Nada podemos afirmar acerca de seus [conteúdos] possíveis. A totalidade é empírica somente em seus aspectos parciais e na medida em que estes são conteúdos da consciência. Enquanto totalidade, porém, ela transcende necessariamente a consciência. Consequentemente, o “si-mesmo” é um conceito-limite, [...] sua nitidez aumenta constantemente com a experiência, conforme atestam nossos sonhos, sem nada sacrificar de sua transcendência.<span class="cite">Jung, <em>Psicologia e Alquimia</em> (OC/12), nota 129</span></blockquote></div><aside class="m-notes"><p><span class="lbl">Características</span>Totalidade · centro · unidade · regulador da individuação · interno e externo · individual e coletivo · passado e futuro</p><p><span class="lbl">Natureza</span>Fonte criadora; teoricamente hipotético, empiricamente numinoso; indiferenciável da imagem de Deus ou do Tao.</p><p class="src">Notas a partir de Kast, <em>Jung e a Psicologia Profunda</em>, cap. “O processo de individuação”.</p></aside></div>` },
+
+  // ---- Slide "Inconsciente Coletivo" (a fonte) — 4 modais sobre o desenho ----
+  { slide:9, canvas:'canvas-wrap-ic', showAt:1, cx:6, cy:14, title:'Inconsciente pessoal',
+    body:`<blockquote>O inconsciente pessoal contém lembranças perdidas, reprimidas (propositalmente esquecidas), evocações dolorosas, percepções que, por assim dizer, não ultrapassaram o limiar da consciência (subliminais), isto é, percepções dos sentidos que por falta de intensidade não atingiram a consciência e conteúdos que ainda não amadureceram para a consciência. Corresponde à figura da sombra, que frequentemente aparece nos sonhos.<span class="cite">Jung, OC/7.1, §103</span></blockquote>` },
+  { slide:9, canvas:'canvas-wrap-ic', showAt:1, cx:46, cy:90, title:'Inconsciente coletivo',
+    body:`<blockquote>Corresponde às camadas mais profundas do inconsciente, aos fundamentos estruturais da psique comuns a todas as pessoas.</blockquote><blockquote>Do mesmo modo que o corpo humano apresenta uma anatomia comum, sempre a mesma, apesar de todas as diferenças raciais, assim também a psique possui um substrato comum. Chamei a este substrato inconsciente coletivo. Na qualidade de herança comum transcende todas as diferenças de cultura e de atitudes conscientes, e não consiste meramente em conteúdos capazes de se tornarem conscientes, mas em disposições latentes para reações idênticas. Assim o inconsciente coletivo é simplesmente a expressão psíquica da identidade da estrutura cerebral, independente de todas as diferenças raciais. Deste modo, pode ser explicada a analogia, que vai mesmo até a identidade, entre vários temas míticos e símbolos, e a possibilidade de compreensão entre os seres humanos em geral. As múltiplas linhas de desenvolvimento psíquico partem de um tronco comum cujas raízes se perdem muito longe num passado remoto.<span class="cite">Silveira, Jung: Vida e Obra</span></blockquote>` },
+  { slide:9, canvas:'canvas-wrap-ic', showAt:2, cx:51, cy:16, title:'Abaissement du niveau mental',
+    body:`<blockquote>O mesmo se dá com os complexos, e eu insisto em sua relação com a consciência por eles representarem um grande papel na análise onírica. [...] Quanto mais nos aproximamos daquele centro, tanto mais se experimenta o que Janet chamou de abaissement du niveau mental: a autonomia da consciência começa a desaparecer, ficando-se mais e mais sob o fascínio dos conteúdos inconscientes. A autonomia da consciência perde sua tensão e força, que reaparecem na atividade aumentada dos elementos do inconsciente. Pode-se observar a forma extrema desse processo, quando se estuda cuidadosamente um caso de insanidade. A fascinação dos conteúdos do inconsciente torna-se gradualmente mais poderosa, até que o paciente mergulhe neste mundo, sendo totalmente vitimado. Ele é, então, a presa de uma nova atividade.<span class="cite">Jung, OC/18.1, §154</span></blockquote>` },
+  { slide:9, canvas:'canvas-wrap-ic', showAt:2, cx:59, cy:44, title:'Endopsique',
+    body:`<div class="modal-figure"><img src="Endopsique.png" alt="Esquema da endopsique — esferas ectopsíquica e endopsíquica"><span class="cite">Jung, OC 18/1</span></div>` },
+];
+
+/* ---------------------------------------------------------
+   Slide "Inconsciente Coletivo" (a fonte) — a ilustração de fundo
+   é estática; os elementos gráficos (círculos, linha de dissociação,
+   penumbra, ponte e setas) são sobrepostos e mudam de estado em 3
+   passos. Linha de dissociação calculada por análise de pixel do
+   próprio desenho (convergência dos jatos ~47.2% da largura; base/
+   linha do chão ~75.5% da altura) — não estimada a olho.
+   Cada complexo tem uma posição "base" (passos 1 e 3, Estado Regular
+   / Função Transcendente) e, quando cruza a linha no Abaissement du
+   Niveau Mental (passo 2), uma posição "invade".
+--------------------------------------------------------- */
+const IC_LINE_X = 47.2;
+const IC_COMPLEXOS = [
+  { left:8,  top:20, size:6.6 },
+  { left:4.5,top:38, size:9.6 },
+  { left:15, top:50, size:5.0 },
+  { left:8.5,top:60, size:6.2 },
+  { left:33, top:31, size:6.0, invade:{ left:55.5, top:36.5, size:4.6 } },
+  { left:29, top:45.5, size:4.3, invade:{ left:58.5, top:50, size:3.3 } },
+];
+const IC_EU = { left:57, top:36, size:17 };
+const IC_EU_SMALL_SIZE = 10.2;
+
+const icCanvas = document.getElementById('canvas-wrap-ic');
+const icComplexoEls = IC_COMPLEXOS.map(C => {
+  const el = document.createElement('div');
+  el.className = 'ic-complexo';
+  icCanvas.appendChild(el);
+  return el;
+});
+const icEuEl = document.createElement('div');
+icEuEl.className = 'ic-eu';
+icEuEl.innerHTML = '<span class="ic-eu-label">Eu</span>';
+icCanvas.insertBefore(icEuEl, document.getElementById('ic-bridge'));
+
+const IC_SYMBOL_BODY = `<blockquote>O símbolo, no entanto, pressupõe sempre que a expressão escolhida seja a melhor designação ou fórmula possível de um fato relativamente desconhecido, mas cuja existência é conhecida ou postulada. [...] Uma concepção que explica a expressão simbólica como a melhor formulação possível de algo relativamente desconhecido, não podendo, por isso mesmo, ser mais clara ou característica, é simbólica.<span class="cite">Jung, OC6, §903-904</span></blockquote>`;
+document.getElementById('ic-symbol-hotspot').addEventListener('click', (e) => {
+  e.stopPropagation();
+  openModal('Símbolo', IC_SYMBOL_BODY);
+});
+
+function renderIC(step){
+  const abaissement = step === 2;
+  IC_COMPLEXOS.forEach((C, i) => {
+    const pos = (abaissement && C.invade) ? C.invade : C;
+    const el = icComplexoEls[i];
+    el.style.left = pos.left + '%';
+    el.style.top = pos.top + '%';
+    el.style.width = pos.size + '%';
+    el.style.height = pos.size + '%';
+  });
+  const euSize = abaissement ? IC_EU_SMALL_SIZE : IC_EU.size;
+  icEuEl.style.left = IC_EU.left + '%';
+  icEuEl.style.top = IC_EU.top + '%';
+  icEuEl.style.width = euSize + '%';
+  icEuEl.style.height = euSize + '%';
+
+  document.getElementById('ic-line').classList.toggle('thin', abaissement);
+  document.getElementById('ic-penumbra').classList.toggle('advance', abaissement);
+
+  const transcendente = step === 3;
+  document.getElementById('ic-bridge').classList.toggle('visible', transcendente);
+  document.getElementById('ic-arrows').classList.toggle('visible', transcendente);
+  document.getElementById('ic-symbol').classList.toggle('visible', transcendente);
+  document.getElementById('ic-symbol-hotspot').classList.toggle('active', transcendente);
+}
+
+/* ---------------------------------------------------------
+   Estado geral do deck: uma lista de slides, cada um com seu
+   número de passos internos (montagem em camadas ou quadrinhos
+   revelados um a um). "slide" e "step" navegam por todos eles.
+--------------------------------------------------------- */
+const SLIDES = [
+  { key:'capa',              totalSteps:1 },
+  { key:'consciencia',       totalSteps:7 },
+  { key:'energia-capa',      totalSteps:1 },
+  { key:'quadrinhos-a',      totalSteps:3 },
+  { key:'quadrinhos-b',      totalSteps:2 },
+  { key:'quadrinhos-c',      totalSteps:3 },
+  { key:'desenvolvimento-a', totalSteps:4 },
+  { key:'desenvolvimento-b', totalSteps:4 },
+  { key:'inconsciente-coletivo', totalSteps:3 },
+  { key:'individuacao-capa', totalSteps:1 },
+  { key:'individuacao', totalSteps:6 },
+  { key:'encerramento', totalSteps:1 },
+  { key:'referencias', totalSteps:1 },
+];
+const TOTAL_STEPS = SLIDES[1].totalSteps; // compat: passos de montagem da Consciência
+
+let slide = 1;
+let step = 1;
+
+const canvasWrap = document.getElementById('canvas-wrap');
+const dotsWrap = document.getElementById('progress-dots');
+const stepCounterEl = document.getElementById('step-counter');
+const subtitleEl = document.getElementById('deck-subtitle');
+const slideCapa = document.getElementById('slide-capa');
+const slideConsciencia = document.getElementById('slide-consciencia');
+const bottomHint = document.getElementById('bottom-hint');
+
+const slideEls = document.querySelectorAll('.slide-view'); // ordem = ordem de SLIDES
+const COMIC_SLIDE_INDEX = { 4:'slide-quadrinhos-a', 5:'slide-quadrinhos-b', 6:'slide-quadrinhos-c' };
+
+// build layer <img> elements
+LAYERS.forEach((L, idx) => {
+  const img = document.createElement('img');
+  img.src = L.src;
+  img.className = 'layer';
+  img.dataset.step = L.step;
+  img.style.left = L.left + '%';
+  img.style.top = L.top + '%';
+  img.style.width = L.width + '%';
+  img.style.height = L.height + '%';
+  img.alt = 'camada ' + (idx+1);
+  canvasWrap.appendChild(img);
+});
+
+// build layer <img> elements do módulo Desenvolvimento Consciente
+DEV_LAYERS.forEach((L) => {
+  const img = document.createElement('img');
+  img.src = L.src;
+  img.className = 'dev-layer';
+  img.dataset.slide = L.slide;
+  img.dataset.show = L.showAt;
+  if(L.hideAt) img.dataset.hide = L.hideAt;
+  if(L.fade) img.classList.add('fade-only');
+  img.style.left = L.left + '%';
+  img.style.top = L.top + '%';
+  img.style.width = L.width + '%';
+  img.style.height = L.height + '%';
+  img.alt = L.src;
+  document.getElementById(L.canvas).appendChild(img);
+});
+
+// hotspots circulares do módulo Desenvolvimento Consciente (depois das camadas)
+DEV_HOTSPOTS.forEach((H) => {
+  const btn = document.createElement('button');
+  btn.className = 'dev-hotspot';
+  btn.dataset.slide = H.slide;
+  btn.dataset.show = H.showAt;
+  btn.style.left = H.cx + '%';
+  btn.style.top = H.cy + '%';
+  btn.title = H.title;
+  btn.innerHTML = '<span class="dot"></span>';
+  btn.addEventListener('click', (e)=>{ e.stopPropagation(); openModal(H.title, H.body, H.wide); });
+  document.getElementById(H.canvas).appendChild(btn);
+});
+
+// build hotspot buttons
+HOTSPOTS.forEach((H) => {
+  const btn = document.createElement('button');
+  btn.className = 'hotspot' + (H.indicator === 'outline' ? ' outline' : '');
+  btn.dataset.step = H.step;
+  btn.style.left = H.left + '%';
+  btn.style.top = H.top + '%';
+  btn.style.width = H.width + '%';
+  btn.style.height = H.height + '%';
+  btn.title = H.title;
+  if(H.indicator === 'outline'){
+    // contorno pulsante desenhado sobre o próprio balão — ver CSS .hotspot.outline
+  } else {
+    const dot = document.createElement('span');
+    dot.className = 'dot';
+    // decide de que lado do retângulo clicável o dot aparece: o lado com
+    // mais espaço até a borda do canvas, para nunca cair fora da arte.
+    let side = H.dotSide;
+    if(!side){
+      const mL = H.left, mR = 100 - (H.left + H.width), mT = H.top, mB = 100 - (H.top + H.height);
+      const maxMargin = Math.max(mL, mR, mT, mB);
+      side = maxMargin === mR ? 'right' : maxMargin === mB ? 'bottom' : maxMargin === mL ? 'left' : 'top';
+    }
+    dot.classList.add('dot-' + side);
+    btn.appendChild(dot);
+  }
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openModal(H.title, H.body);
+  });
+  canvasWrap.appendChild(btn);
+});
+
+// progress dots: um nó por passo, somando todos os slides
+const TOTAL_NODES = SLIDES.reduce((a,s)=>a+s.totalSteps,0);
+for(let i=1;i<=TOTAL_NODES;i++){
+  const d = document.createElement('div');
+  d.className = 'dot';
+  d.dataset.node = i;
+  dotsWrap.appendChild(d);
+}
+
+function currentNode(){
+  let n = 0;
+  for(let i=0;i<slide-1;i++){ n += SLIDES[i].totalSteps; }
+  return n + step;
+}
+
+const SLIDE_META = {
+  1: { sub:'Capa', hint:'clique ou pressione uma seta para começar', counter:()=>'Capa' },
+  2: { sub:'Consciência — protótipo interativo', hint:'clique nos pontos dourados para abrir as definições · setas ou espaço para avançar', counter:()=>'Passo ' + step + ' / ' + SLIDES[1].totalSteps },
+  3: { sub:'Energia Psíquica — abertura', hint:'clique ou pressione uma seta para continuar', counter:()=>'Abertura' },
+  4: { sub:'Energia Psíquica — Progressão e Represamento', hint:'clique para revelar o próximo quadrinho · toque em "citação" para ler a fonte', counter:()=>'Quadrinho ' + step + ' / ' + SLIDES[3].totalSteps },
+  5: { sub:'Energia Psíquica — Colapso e Regressão', hint:'clique para revelar o próximo quadrinho · toque em "citação" para ler a fonte', counter:()=>'Quadrinho ' + step + ' / ' + SLIDES[4].totalSteps },
+  6: { sub:'Energia Psíquica — Sombra e Emergência Criativa', hint:'clique para revelar o próximo quadrinho · toque em "citação" para ler a fonte', counter:()=>'Quadrinho ' + step + ' / ' + SLIDES[5].totalSteps },
+  7: { sub:'Desenvolvimento Consciente — Atitude e Desenvolvimento', hint:'clique ou pressione uma seta para avançar', counter:()=>'Passo ' + step + ' / ' + SLIDES[6].totalSteps },
+  8: { sub:'Desenvolvimento Consciente — Inconsciente Coletivo', hint:'clique nos pontos dourados para abrir as citações · setas ou espaço para avançar', counter:()=>'Passo ' + step + ' / ' + SLIDES[7].totalSteps },
+  9: { sub:()=> 'Inconsciente Coletivo — ' + ['Estado Regular','Abaissement du Niveau Mental','Função Transcendente'][step-1],
+       hint:'clique nos pontos dourados para abrir as definições · setas ou espaço para avançar', counter:()=>'Passo ' + step + ' / ' + SLIDES[8].totalSteps },
+  10: { sub:'Individuação — abertura', hint:'clique ou pressione uma seta para continuar', counter:()=>'Abertura' },
+  11: { sub:()=> 'Individuação — ' + ['Persona','Eu (ego)','Sombra','Anima','Animus','Si-mesmo'][step-1],
+       hint:'clique nos pontos dourados para abrir as definições · setas ou espaço para avançar', counter:()=>'Passo ' + step + ' / ' + SLIDES[10].totalSteps },
+  12: { sub:'Encerramento', hint:'clique ou pressione uma seta para continuar', counter:()=>'Encerramento' },
+  13: { sub:'Referências', hint:'fim da apresentação', counter:()=>'Referências' },
+};
+
+function render(){
+  const cur = SLIDES[slide-1];
+
+  slideEls.forEach((el, idx)=>{ el.classList.toggle('active', (idx+1) === slide); });
+  slideCapa.classList.toggle('reveal', slide === 1);
+  document.getElementById('slide-energia-capa').classList.toggle('reveal', slide === 3);
+  document.getElementById('slide-individuacao-capa').classList.toggle('reveal', slide === 10);
+  document.getElementById('slide-encerramento').classList.toggle('reveal', slide === 12);
+  document.getElementById('slide-referencias').classList.toggle('reveal', slide === 13);
+
+  document.querySelectorAll('.layer').forEach(img=>{
+    const s = parseInt(img.dataset.step,10);
+    img.classList.toggle('visible', slide === 2 && s <= step);
+  });
+  document.querySelectorAll('.hotspot').forEach(btn=>{
+    const s = parseInt(btn.dataset.step,10);
+    btn.classList.toggle('active', slide === 2 && s <= step);
+  });
+  document.querySelectorAll('.dev-layer').forEach(img=>{
+    const s = parseInt(img.dataset.slide,10);
+    const showAt = parseInt(img.dataset.show,10);
+    const hideAt = img.dataset.hide ? parseInt(img.dataset.hide,10) : null;
+    img.classList.toggle('visible', slide === s && step >= showAt && (hideAt===null || step < hideAt));
+  });
+
+  document.querySelectorAll('.dev-hotspot').forEach(btn=>{
+    btn.classList.toggle('active', slide === parseInt(btn.dataset.slide,10) && step >= parseInt(btn.dataset.show,10));
+  });
+  document.getElementById('board-word').classList.toggle('active', slide === 7 && step >= 3);
+
+  Object.keys(COMIC_SLIDE_INDEX).forEach(k=>{
+    const n = parseInt(k,10);
+    const el = document.getElementById(COMIC_SLIDE_INDEX[k]);
+    el.querySelector('.comic-stage').classList.toggle('reveal', slide === n);
+    el.querySelectorAll('.panel').forEach(p=>{
+      const s = parseInt(p.dataset.step,10);
+      p.classList.toggle('visible', slide === n && s <= step);
+    });
+    el.querySelectorAll('.panel-cite').forEach(btn=>{
+      const s = parseInt(btn.closest('.panel').dataset.step,10);
+      btn.classList.toggle('active', slide === n && s <= step);
+    });
+  });
+
+  const node = currentNode();
+  document.querySelectorAll('.progress-dots .dot').forEach(d=>{
+    const n = parseInt(d.dataset.node,10);
+    d.classList.toggle('done', n < node);
+    d.classList.toggle('current', n === node);
+  });
+
+  if(slide === 9) renderIC(step);
+
+  const meta = SLIDE_META[slide];
+  subtitleEl.textContent = typeof meta.sub === 'function' ? meta.sub() : meta.sub;
+  bottomHint.textContent = meta.hint;
+  stepCounterEl.textContent = meta.counter();
+
+  document.getElementById('btn-prev').disabled = (slide === 1 && step === 1);
+  document.getElementById('btn-next').disabled = (slide === SLIDES.length && step >= cur.totalSteps);
+}
+
+function next(){
+  if(isModalOpen()) return;
+  const cur = SLIDES[slide-1];
+  if(step < cur.totalSteps){ step++; render(); return; }
+  if(slide < SLIDES.length){ slide++; step = 1; render(); }
+}
+function prev(){
+  if(isModalOpen()) return;
+  if(step > 1){ step--; render(); return; }
+  if(slide > 1){ slide--; step = SLIDES[slide-1].totalSteps; render(); }
+}
+function restart(){ slide = 1; step = 1; render(); }
+
+document.getElementById('btn-next').addEventListener('click', next);
+document.getElementById('btn-prev').addEventListener('click', prev);
+document.getElementById('btn-restart').addEventListener('click', restart);
+
+// ===== Tela cheia (essencial para projeção via tablet/celular, onde o Chrome
+// mobile mantém a barra de endereço visível fora do modo fullscreen) =====
+(function(){
+  const fsBtn = document.getElementById('btn-fullscreen');
+  if(!fsBtn) return;
+  const docEl = document.documentElement;
+
+  function fsSupported(){
+    return !!(docEl.requestFullscreen || docEl.webkitRequestFullscreen ||
+              docEl.mozRequestFullScreen || docEl.msRequestFullscreen);
+  }
+  if(!fsSupported()){ fsBtn.style.display = 'none'; return; }
+
+  function isFullscreen(){
+    return !!(document.fullscreenElement || document.webkitFullscreenElement ||
+              document.mozFullScreenElement || document.msFullscreenElement);
+  }
+  function requestFS(){
+    if(docEl.requestFullscreen) return docEl.requestFullscreen();
+    if(docEl.webkitRequestFullscreen) return docEl.webkitRequestFullscreen();
+    if(docEl.mozRequestFullScreen) return docEl.mozRequestFullScreen();
+    if(docEl.msRequestFullscreen) return docEl.msRequestFullscreen();
+  }
+  function exitFS(){
+    if(document.exitFullscreen) return document.exitFullscreen();
+    if(document.webkitExitFullscreen) return document.webkitExitFullscreen();
+    if(document.mozCancelFullScreen) return document.mozCancelFullScreen();
+    if(document.msExitFullscreen) return document.msExitFullscreen();
+  }
+  function tryLockLandscape(){
+    try{
+      if(screen.orientation && screen.orientation.lock){
+        screen.orientation.lock('landscape').catch(()=>{});
+      }
+    }catch(e){}
+  }
+  function toggleFullscreen(){
+    if(isFullscreen()){
+      exitFS();
+    } else {
+      const p = requestFS();
+      if(p && typeof p.then === 'function'){ p.then(tryLockLandscape).catch(()=>{}); }
+      else { tryLockLandscape(); }
+    }
+  }
+  function syncIcon(){
+    const fs = isFullscreen();
+    fsBtn.classList.toggle('is-fullscreen', fs);
+    fsBtn.title = fs ? 'Sair da tela cheia' : 'Tela cheia';
+  }
+  fsBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleFullscreen(); });
+  ['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange'].forEach(evt=>{
+    document.addEventListener(evt, syncIcon);
+  });
+})();
+
+// clique em área vazia de qualquer slide avança (hotspots e botões de citação
+// já chamam stopPropagation em seus próprios handlers)
+slideEls.forEach(el=>{ el.addEventListener('click', next); });
+
+// palavra "inconsciente" no quadro (Desenvolvimento Consciente, passo 3)
+const BOARD_WORD_MODAL = {
+  title:'Inconsciente',
+  body:`<blockquote>[A função do inconsciente] não pode ser considerada como uma espécie de complementação mecânica da consciência. Ele tem mais o caráter de compensação, isto é, de uma escolha inteligente dos meios que visam não só ao estabelecimento do equilíbrio mas também à progressão no sentido da totalidade. A reação do inconsciente não é de forma alguma meramente passiva, mas toma iniciativas e é criadora; e às vezes sua atividade intencional predomina sobre sua reatividade costumeira. Como participante do jogo da diferenciação da consciência ele não faz apenas oposição, mas contribui positivamente, através da revelação de seus conteúdos, para o enriquecimento da consciência, promovendo assim sua diferenciação.<span class="cite">Jung, OC/18.2, §1418</span></blockquote>`
+};
+document.getElementById('board-word').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  openModal(BOARD_WORD_MODAL.title, BOARD_WORD_MODAL.body);
+});
+
+// citações dos quadrinhos de Energia Psíquica
+document.querySelectorAll('.panel-cite').forEach(btn=>{
+  btn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    const c = CITATIONS[btn.dataset.cite];
+    if(c){ openModal(c.title, c.body); }
+  });
+});
+
+// keyboard navigation
+window.addEventListener('keydown', (e)=>{
+  if(isModalOpen()){
+    if(e.key === 'Escape'){ closeModal(); }
+    return;
+  }
+  if(e.key === 'ArrowRight' || e.key === ' '){ e.preventDefault(); next(); }
+  if(e.key === 'ArrowLeft'){ e.preventDefault(); prev(); }
+  if(e.key === 'f' || e.key === 'F'){ document.getElementById('btn-fullscreen').click(); }
+});
+
+// touch swipe
+let touchStartX = null;
+document.body.addEventListener('touchstart', (e)=>{ touchStartX = e.changedTouches[0].clientX; }, {passive:true});
+document.body.addEventListener('touchend', (e)=>{
+  if(touchStartX === null) return;
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if(Math.abs(dx) > 40){ dx < 0 ? next() : prev(); }
+  touchStartX = null;
+}, {passive:true});
+
+// ===== Modal =====
+const modalBackdrop = document.getElementById('modal-backdrop');
+const modalTitle = document.getElementById('modal-title');
+const modalBody = document.getElementById('modal-body');
+document.getElementById('modal-close').addEventListener('click', closeModal);
+modalBackdrop.addEventListener('click', (e)=>{ if(e.target === modalBackdrop) closeModal(); });
+
+function openModal(title, bodyHTML, wide){
+  document.querySelector('.modal-box').classList.toggle('wide', !!wide);
+  modalTitle.textContent = title;
+  modalBody.innerHTML = bodyHTML;
+  modalBackdrop.classList.add('open');
+}
+function closeModal(){ modalBackdrop.classList.remove('open'); }
+function isModalOpen(){ return modalBackdrop.classList.contains('open'); }
+
+render();
+</script>
+</body>
+</html>
