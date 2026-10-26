@@ -6,7 +6,7 @@
 <title>Estrutura e Dinâmica da Psique</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Poppins:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg: #f2ece0;
@@ -159,6 +159,63 @@
      cada uma calculada a partir do tamanho real da ilustração-fonte. */
   #canvas-wrap-dev-a{ --ar: 1.40336; } /* 2672/1904 */
   #canvas-wrap-dev-b{ --ar: 1.13395; } /* 1600/1411 (ilustração colorida) */
+
+  /* ---- Textos em tipografia sobre as ilustrações ----
+     Cada camada com texto vira uma caixa (.lyr-box) que também é um
+     "container": as medidas internas usam cqw (% da largura da própria
+     camada), então o texto acompanha a ilustração em qualquer tela. */
+  .lyr-box{ container-type:inline-size; }
+  .lyr-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; display:block; }
+  .lt{
+    position:absolute; white-space:nowrap; pointer-events:none;
+    font-family:'Poppins', sans-serif; font-weight:500; line-height:1.2;
+    color:var(--ink); text-align:center; letter-spacing:0;
+    transform: translate(-50%,-50%) rotate(var(--r,0deg));
+  }
+  .lt.l{ text-align:left; transform: translate(0,-50%) rotate(var(--r,0deg)); transform-origin:0 50%; }
+  .lt.b{ font-weight:700; }
+  .lt.lite{ color:#fbf6ea; }
+  .lt.soft{ color:#3b5648; }
+  .lt.halo{ text-shadow: 0 0 .3cqw var(--canvas-bg), 0 0 .3cqw var(--canvas-bg), 0 0 .8cqw var(--canvas-bg); }
+  .lt.sky{ color:#fbf6ea; text-shadow: 0 .15cqw .5cqw rgba(10,22,46,.95), 0 0 1.5cqw rgba(10,22,46,.7); }
+  .lt i{ font-style:italic; }
+  .lt small{ font-size:.62em; font-weight:500; }
+  /* chamada "Mas…" (Atitude e Desenvolvimento) */
+  .cbox{
+    position:absolute; left:9%; top:14.5%; width:81.5%; height:76%;
+    border-style:solid; border-color:var(--ink);
+    border-width:.5cqw 1.2cqw 1.2cqw .5cqw;
+    border-radius:.5cqw .9cqw .5cqw .7cqw;
+    background:rgba(255,255,255,.4);
+  }
+  /* Características da consciência */
+  .l2{ position:absolute; inset:0; color:var(--ink); font-family:'Poppins',sans-serif; font-weight:500; line-height:1.22; }
+  .l2 .row{ position:absolute; left:2%; display:flex; gap:.28em; align-items:flex-start; white-space:nowrap; }
+  .l2 .bul{ flex:none; width:.95em; height:.95em; margin-top:.12em; }
+  /* Relação com o Eu */
+  .axis{ position:absolute; inset:0; width:100%; height:100%; color:var(--ink); overflow:visible; }
+  /* Funções ectopsíquicas */
+  .f5{ position:absolute; inset:0; color:var(--ink); font-family:'Poppins',sans-serif; }
+  .f5-head{ position:absolute; left:1%; top:.4%; margin:0; font-weight:500; line-height:1.24; white-space:nowrap; }
+  .f5-head u{ text-decoration:underline; text-decoration-thickness:.6cqw; text-underline-offset:.5cqw; text-decoration-skip-ink:none; }
+  .f5-box{ position:absolute; display:flex; align-items:center; justify-content:center; font-weight:700; letter-spacing:.02em; line-height:1; }
+  .f5-box.pur{ background:#915bd8; color:#fff; }
+  .f5-box.tea{ background:#85b8aa; color:#1f2a26; box-shadow: inset 0 0 0 .3cqw rgba(31,42,38,.4); }
+  .f5-box span{ white-space:nowrap; display:block; }
+  .f5-box .rot-l{ transform:rotate(-90deg); }
+  .f5-box .rot-r{ transform:rotate(90deg); }
+  .f5-arm{ position:absolute; background:#34453e; border-radius:.7cqw; display:block; }
+  .f5-oval{
+    position:absolute; border-radius:50%; border:.6cqw solid #3a4a42;
+    display:flex; align-items:center; justify-content:center;
+    background:
+      radial-gradient(ellipse 34% 58% at 24% 64%, #915bd8 0 66%, transparent 70%),
+      radial-gradient(ellipse 20% 62% at 73% 28%, #915bd8 0 62%, transparent 68%),
+      #85b8aa;
+    box-shadow: inset 0 0 2cqw rgba(50,25,95,.35);
+    color:#1c1530; font-weight:600; line-height:1;
+  }
+  .f5-oval span{ white-space:nowrap; }
   .layer, .dev-layer{
     position:absolute;
     width:100%; height:100%; top:0; left:0;
@@ -878,6 +935,7 @@
     <div class="stage">
       <div class="canvas-wrap" id="canvas-wrap-ic">
         <img class="ic-bg" src="Inconsciente_Coletivo.png" alt="Inconsciente Coletivo">
+        <div class="lyr-box" id="ic-labels" style="position:absolute;inset:0;pointer-events:none;"></div>
         <div class="ic-penumbra" id="ic-penumbra"></div>
         <div class="ic-line" id="ic-line"></div>
         <!-- círculos de complexos e do eu injetados via JS -->
@@ -1003,10 +1061,10 @@
 
 const LAYERS = [
   { step:1, src:'layer-01-titulo.png',        left:4.566,  top:7.233,  width:20.776, height:32.587 },
-  { step:2, src:'layer-02-caracteristicas.png',left:21.233, top:14.583, width:14.840, height:25.354 },
-  { step:3, src:'layer-03-relacao-eu.png',     left:1.712,  top:11.950, width:7.192,  height:32.153 },
+  { step:2, id:'layer-02-caracteristicas',left:21.233, top:14.583, width:14.840, height:25.354 },
+  { step:3, id:'layer-03-relacao-eu',     left:1.712,  top:11.950, width:7.192,  height:32.153 },
   { step:3, src:'layer-04-eu.png',             left:0.913,  top:37.933, width:27.854, height:24.331 },
-  { step:4, src:'layer-05-funcoes.png',        left:2.740,  top:65.094, width:29.395, height:34.906 },
+  { step:4, id:'layer-05-funcoes',        left:2.740,  top:65.094, width:29.395, height:34.906 },
   { step:5, src:'layer-06-progressao.png',     left:34.019, top:23.585, width:33.533, height:17.138 },
   { step:6, src:'layer-07-diferenciacao.png',  left:49.572, top:14.465, width:15.526, height:29.512 },
   { step:7, src:'layer-08-porta.png',          left:27.140, top:0,      width:72.860, height:100 },
@@ -1110,7 +1168,8 @@ const DEV_LAYERS = [
   // Slide "Atitude e Desenvolvimento" (canvas 2672×1904)
   { slide:7, canvas:'canvas-wrap-dev-a', src:'dev-a-01-visao-do-eu.png', left:0, top:0, width:100, height:100, showAt:1, hideAt:2 },
   { slide:7, canvas:'canvas-wrap-dev-a', src:'dev-a-02-visao-real.png',  left:0, top:0, width:100, height:100, showAt:2 },
-  { slide:7, canvas:'canvas-wrap-dev-a', src:'dev-a-03-chamada.png',     left:72.942, top:77.153, width:24.139, height:22.216, showAt:4 },
+  { slide:7, canvas:'canvas-wrap-dev-a', id:'dev-a-label', left:0, top:0, width:100, height:100, showAt:1 },
+  { slide:7, canvas:'canvas-wrap-dev-a', id:'dev-a-03-chamada',         left:72.942, top:77.153, width:24.139, height:22.216, showAt:4 },
   // Slide "Individuação" (canvas 3504×2544, mesma proporção da Consciência).
   // Posições das figuras medidas por correlação de template contra "Composição final.png"
   // (encaixe exato, escala 1:1). A cabeça do Si-mesmo entra por trás das figuras no passo 6.
@@ -1263,36 +1322,61 @@ const bottomHint = document.getElementById('bottom-hint');
 const slideEls = document.querySelectorAll('.slide-view'); // ordem = ordem de SLIDES
 const COMIC_SLIDE_INDEX = { 4:'slide-quadrinhos-a', 5:'slide-quadrinhos-b', 6:'slide-quadrinhos-c' };
 
+/* Textos das ilustrações, em tipografia. x/y = centro (ou borda esquerda em .l) em % da camada;
+   fs = tamanho em cqw (% da largura da camada); r = rotação em graus. */
+const LAYER_TEXT = {"dev-a-label":{"texts":[{"h":"CONSCIÊNCIA<br>DO EU <small>(unilateralidade)</small>","x":15.6,"y":58.1,"fs":1.97,"c":"b"}]},"dev-a-01-visao-do-eu":{"texts":[{"h":"como o eu vê o<br>desenvolvimento…","x":39.2,"y":40.0,"fs":2.19}]},"dev-a-02-visao-real":{"texts":[{"h":"Como o desenvolvimento<br>realmente ocorre…","x":86.4,"y":34.7,"fs":1.74}]},"dev-b-02-coletivo-cor":{"texts":[{"h":"Nosso desenvolvimento é <i>sempre</i> individual,<br>sociocultural <i>e</i> condicionado por<br>nossas predisposições humanas.","x":50,"y":11.2,"fs":3.11,"c":"sky","lh":1.3}]},"ic":{"texts":[{"h":"IMAGENS ESPONTÂNEAS","x":53.6,"y":31.6,"fs":2.04,"r":1.5,"c":"halo"},{"h":"INCONSCIENTE","x":13.8,"y":73.3,"fs":2.62,"c":"b halo"},{"h":"CONSCIÊNCIA","x":86.2,"y":74.9,"fs":2.2,"r":2,"c":"b halo"},{"h":"INCONSCIENTE<br>COLETIVO","x":47.0,"y":83.8,"fs":2.22,"c":"b halo","lh":1.15}]},"layer-04-eu":{"texts":[{"h":"(ego)","x":45.2,"y":30.3,"fs":4.66},{"h":"imagem<br>de si","x":22.8,"y":43.9,"fs":3.82,"r":-32},{"h":"VONTADE","x":72.4,"y":37.2,"fs":4.32,"c":"b"},{"h":"(energia<br>disponível)","x":59.3,"y":51.5,"fs":4.86,"a":"l","lh":1.15},{"h":"Memória<br>Voluntária","x":32.6,"y":89.8,"fs":5.6,"a":"l","lh":1.15}]},"layer-06-progressao":{"texts":[{"h":"Atitude Consciente","x":45.3,"y":11.8,"fs":4.16},{"h":"OBSTÁCULO","x":84.4,"y":35.9,"fs":2.62,"c":"b"},{"h":"progressão","x":43.0,"y":55.3,"fs":3.64,"c":"b soft"},{"h":"DIFERENCIAÇÃO","x":22.2,"y":81.2,"fs":3.68}]},"layer-07-diferenciacao":{"texts":[{"h":"Seleção","x":29.5,"y":14.2,"fs":7.72},{"h":"Diferenciação","x":34.7,"y":72.9,"fs":6.54},{"h":"Exclusão","x":75.6,"y":90.3,"fs":8.21,"c":"lite"}]},"layer-08-porta":{"texts":[{"h":"UNILATERALIDADE","x":57.0,"y":18.6,"fs":1.58,"r":-29,"c":"b"},{"h":"VAMOS PENSAR<br>SOBRE A <b>CONDIÇÃO</b><br>DA <b>CONSCIÊNCIA</b>","x":83.4,"y":28.5,"fs":1.74,"lh":1.25},{"h":"Esta figura sombria<br>é importante","x":72.2,"y":47.7,"fs":1.79},{"h":"<b>COMPLEXOS</b><br>vocês já os<br>conhecem,<br>não os esqueçam","x":67.7,"y":73.8,"fs":1.68,"a":"l","c":"lite","lh":1.15},{"h":"Exclusão","x":46.9,"y":41.1,"fs":1.96,"c":"lite"},{"h":"DISSOCIAÇÃO","x":27.2,"y":49.0,"fs":1.87,"r":-36},{"h":"Lembrem<br>desta imagem","x":32.8,"y":80.3,"fs":2.25,"r":-3,"c":"lite"}]},"dev-a-03-chamada":{"html":"<div class=\"cbox\"></div>","texts":[{"h":"Mas…<br>…e quando o<br>eu ainda não<br>está consolidado?","x":15.5,"y":52.5,"fs":6.91,"a":"l","lh":1.3}]},"layer-02-caracteristicas":{"html":"<div class=\"l2\" style=\"font-size:9.0cqw\"><div class=\"row\" style=\"top:4.5%\"><svg class=\"bul\" viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M3 1.5V12.5H13.2M10.2 9.2L13.4 12.5L10.2 15.7\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg><div class=\"rt\">Intermitente</div></div><div class=\"row\" style=\"top:18.5%\"><svg class=\"bul\" viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M3 1.5V12.5H13.2M10.2 9.2L13.4 12.5L10.2 15.7\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg><div class=\"rt\">Poucas informações<br>por vez</div></div><div class=\"row\" style=\"top:42.5%\"><svg class=\"bul\" viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M3 1.5V12.5H13.2M10.2 9.2L13.4 12.5L10.2 15.7\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg><div class=\"rt\">campo<br>fenomenológico<br>(imagens)</div></div><div class=\"row\" style=\"top:73.5%\"><svg class=\"bul\" viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M3 1.5V12.5H13.2M10.2 9.2L13.4 12.5L10.2 15.7\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg><div class=\"rt\">Órgão adaptativo<br>da psique</div></div></div>"},"layer-03-relacao-eu":{"html":"<svg class=\"axis\" viewBox=\"0 0 252 818\" preserveAspectRatio=\"none\" aria-hidden=\"true\"><path d=\"M83 29L53 35L80 776\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M80 786H226\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.6\" stroke-linecap=\"round\"/><path d=\"M222 766L248 786L222 805Z\" fill=\"currentColor\"/></svg>","texts":[{"h":"Conteúdos relacionados com o eu","x":14.5,"y":51.0,"fs":14.8,"r":-90}]},"layer-05-funcoes":{"html":"<div class=\"f5\"><p class=\"f5-head\" style=\"font-size:5.35cqw\">os conteúdos psíquicos aparecem<br>na consciência como <u><b>IMAGENS</b></u> que<br>se configuram segundo quatro<br><u><b>FUNÇÕES ECTOPSÍQUICAS</b></u></p><i class=\"f5-arm\" style=\"left:15.0%;top:62.2%;width:5.6%;height:2.6%\"></i><i class=\"f5-arm\" style=\"left:54.2%;top:62.2%;width:5.4%;height:2.6%\"></i><i class=\"f5-arm\" style=\"left:37.3%;top:45.6%;width:1.6%;height:7.2%\"></i><i class=\"f5-arm\" style=\"left:36.6%;top:76.0%;width:1.6%;height:6.4%\"></i><div class=\"f5-oval\" style=\"left:19.6%;top:50.8%;width:36.6%;height:25.8%\"><span style=\"font-size:6.2cqw\">Imagem</span></div><div class=\"f5-box pur\" style=\"left:24.1%;top:35.5%;width:31.4%;height:10.3%\"><span style=\"font-size:4.9cqw\">SENSAÇÃO</span></div><div class=\"f5-box pur\" style=\"left:22.6%;top:82.1%;width:30.7%;height:11%\"><span style=\"font-size:4.9cqw\">INTUIÇÃO</span></div><div class=\"f5-box tea\" style=\"left:3.9%;top:41.8%;width:9.1%;height:41.8%\"><span class=\"rot-l\" style=\"font-size:4.5cqw\">PENSAMENTO</span></div><div class=\"f5-box tea\" style=\"left:65.3%;top:43.9%;width:8.9%;height:41.5%\"><span class=\"rot-r\" style=\"font-size:4.5cqw\">SENTIMENTO</span></div></div>","texts":[{"h":"Há algo","x":59.8,"y":40.6,"fs":3.6,"a":"l"},{"h":"O que é?","x":3.9,"y":37.0,"fs":3.5,"a":"l"},{"h":"O valor<br>relativo","x":77.6,"y":64.5,"fs":3.25,"a":"l","lh":1.15},{"h":"As conexões<br>que faz","x":58.0,"y":92.6,"fs":3.6,"a":"l","lh":1.15}]}};
+
+function layerId(L){ return L.id || L.src.replace(/\.[a-z]+$/,''); }
+function makeTextEl(T){
+  const d = document.createElement('div');
+  d.className = 'lt' + (T.a === 'l' ? ' l' : '') + (T.c ? ' ' + T.c : '');
+  d.style.left = T.x + '%'; d.style.top = T.y + '%'; d.style.fontSize = T.fs + 'cqw';
+  if(T.r) d.style.setProperty('--r', T.r + 'deg');
+  if(T.lh) d.style.lineHeight = T.lh;
+  d.innerHTML = T.h;
+  return d;
+}
+// monta o elemento de uma camada: <img> simples, ou caixa com imagem + HTML + textos
+function makeLayerEl(L, baseClass){
+  const X = LAYER_TEXT[layerId(L)];
+  let el;
+  if(!X){
+    el = document.createElement('img'); el.src = L.src; el.alt = '';
+  }else{
+    el = document.createElement('div');
+    el.classList.add('lyr-box');
+    if(L.src){
+      const im = document.createElement('img'); im.src = L.src; im.alt = ''; im.className = 'lyr-img';
+      el.appendChild(im);
+    }
+    if(X.html) el.insertAdjacentHTML('beforeend', X.html);
+    (X.texts || []).forEach(T => el.appendChild(makeTextEl(T)));
+  }
+  el.classList.add(baseClass);
+  el.style.left = L.left + '%'; el.style.top = L.top + '%';
+  el.style.width = L.width + '%'; el.style.height = L.height + '%';
+  return el;
+}
+
 // build layer <img> elements
-LAYERS.forEach((L, idx) => {
-  const img = document.createElement('img');
-  img.src = L.src;
-  img.className = 'layer';
-  img.dataset.step = L.step;
-  img.style.left = L.left + '%';
-  img.style.top = L.top + '%';
-  img.style.width = L.width + '%';
-  img.style.height = L.height + '%';
-  img.alt = 'camada ' + (idx+1);
-  canvasWrap.appendChild(img);
+LAYERS.forEach((L) => {
+  const el = makeLayerEl(L, 'layer');
+  el.dataset.step = L.step;
+  canvasWrap.appendChild(el);
 });
 
 // build layer <img> elements do módulo Desenvolvimento Consciente
 DEV_LAYERS.forEach((L) => {
-  const img = document.createElement('img');
-  img.src = L.src;
-  img.className = 'dev-layer';
-  img.dataset.slide = L.slide;
-  img.dataset.show = L.showAt;
-  if(L.hideAt) img.dataset.hide = L.hideAt;
-  if(L.fade) img.classList.add('fade-only');
-  img.style.left = L.left + '%';
-  img.style.top = L.top + '%';
-  img.style.width = L.width + '%';
-  img.style.height = L.height + '%';
-  img.alt = L.src;
-  document.getElementById(L.canvas).appendChild(img);
+  const el = makeLayerEl(L, 'dev-layer');
+  el.dataset.slide = L.slide;
+  el.dataset.show = L.showAt;
+  if(L.hideAt) el.dataset.hide = L.hideAt;
+  if(L.fade) el.classList.add('fade-only');
+  document.getElementById(L.canvas).appendChild(el);
 });
+
+// rótulos do Inconsciente Coletivo (texto em tipografia sobre a ilustração)
+LAYER_TEXT.ic.texts.forEach(T => document.getElementById('ic-labels').appendChild(makeTextEl(T)));
 
 // hotspots circulares do módulo Desenvolvimento Consciente (depois das camadas)
 DEV_HOTSPOTS.forEach((H) => {
